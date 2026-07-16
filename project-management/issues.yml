@@ -1,0 +1,158 @@
+# =============================================================================
+# issues.yml
+# Data source for create-issues.sh.
+# Edit this file to change repo, project, labels, or issue content.
+# The script contains no magic strings — everything lives here.
+# =============================================================================
+
+config:
+  repo: "Ach57/cscs-db-353"
+  project: "cscs-db-353"
+
+# Labels that must exist before issues are created.
+labels:
+  - name: ERD
+    description: "Entity Relation Diagram"
+    color: "db3c0b"
+  - name: DDL
+    description: "Data Definition Diagram"
+    color: "bc69e6"
+  - name: SEED
+    description: "Initial data to populated"
+    color: "add8e6"
+  - name: QUERY
+    description: "a request of information"
+    color: "88eb2d"
+  - name: VERIFY
+    description: "verification"
+    color: "2d86eb"
+  - name: REPORT
+    description: "Reporting section"
+    color: "eb2dd5"
+
+# Issues to create, in order. Each entry needs: title, label, body.
+issues:
+  - title: "ERD-1: Draft E/R diagram from spec, identify entities/relationships/cardinalities"
+    label: ERD
+    body: |
+      Model all entities from the CSCS spec: Location, Personnel, FamilyMember, ClubMember, Hobby, Payment, FIFAGame, plus any weak/associative entities needed for time-based relationships (Personnel↔Location history, ClubMember↔FamilyMember history) and many-to-many links (ClubMember↔Hobby, FIFAGame participation).
+      Must capture:
+
+      - Location: type (Head/Branch), address fields, phone(s), web, capacity
+      - Personnel: role (Admin/Captain/Coach/Assistant Coach/Other), mandate (volunteer/salaried), one role at a time, unique SSN (not null), unique Medicare#
+      - FamilyMember: same contact fields as Personnel, one location at a time but movable over time
+      - ClubMember: global auto-increment membership #, major/minor (derived from DOB), min age 4 at registration
+      - Cardinality arrows: General Manager 1:1 Head Location = President; Personnel N:1 Location per time period; ClubMember N:1 FamilyMember per time period (minors only); ClubMember N:M Hobby; ClubMember N:M FIFAGame (with team/opponent/score/date/location context)
+
+      Acceptance criteria: 
+      Every noun in the spec has a home in the diagram; 
+      all keys underlined; all N:M and time-based relationships resolved into explicit associative entities (not just crow's foot notes).
+
+  - title: "ERD-2: Group review of ERD"
+    label: ERD
+    body: |
+      Walk the diagram against the spec line-by-line as a group before touching SQL. Specifically resolve:
+
+      - How Personnel-at-Location history is modeled (separate PersonnelAssignment table with start_date/end_date, nullable end_date = active)
+      - How FamilyMember-at-Location is modeled (same pattern)
+      - How ClubMember-FamilyMember relationship + relationship_type is modeled over time
+      - Confirm "active/inactive" status is NOT a stored column — it's derived from payment history
+      - Confirm "donation" is NOT a stored column — it's derived from payments exceeding the fee cap
+
+      Acceptance criteria: Signed-off ERD, no open questions, ready to convert to DDL.
+
+  - title: "DDL-1: Write 01_schema.sql"
+    label: DDL
+    body: |
+      Convert the reviewed ERD into MySQL CREATE TABLE statements. Minimum 7 relations plus supporting tables:
+
+      - `Location`, `Personnel`, `PersonnelAssignment`, `FamilyMember`, `FamilyMemberAssignment`, `ClubMember`, `ClubMemberFamilyRelation`, `Hobby`, `ClubMemberHobby`, `Payment`, `FIFAGame`, `FIFAParticipation`
+      Constraints to enforce at the DB level:
+      - `SSN` NOT NULL + UNIQUE on Personnel and FamilyMember
+      - `MedicareNumber` UNIQUE on Personnel and FamilyMember
+      - `FK` from Personnel.role to a role reference (or CHECK/ENUM)
+      - `FK` from Payment.mandate/method to ENUM (Cash/Debit/Credit)
+      - `Membership` # as AUTO_INCREMENT PRIMARY KEY on ClubMember, global not per-location
+      - Appropriate data types (DATE for DOB/dates, DECIMAL for money, not FLOAT)
+
+      Acceptance criteria: Script runs clean on empty MySQL DB, no orphaned FKs, keys/types documented in report.
+
+  - title: "DDL-2: Peer review schema against spec constraints"
+    label: DDL
+    body: |
+      Second teammate checks 01_schema.sql line-by-line against every "must," "cannot," "no two X can have the same Y" in the spec. Produce a checklist comment on the PR confirming each constraint is enforced (not just assumed).
+
+      Acceptance criteria: PR approved with checklist attached; any missing constraint gets a follow-up commit before merge.
+
+  - title: "SEED-1: Write 02_seed.sql"
+    label: SEED
+    body: |
+      Description: Populate every table with ≥10 realistic rows. Data must be deliberately shaped so each of the 8 queries returns ≥2 rows — e.g. need club members with ≥4 hobbies, members with ≥4 FIFA games, major members who are also family members, members with unpaid prior-year fees (for inactive status), payments that exceed the fee cap (for donation calc).
+
+  - title: "QUERY-1 (i): Location details report"
+    label: QUERY
+    body: |
+      Per location — address, city, province, postal code, phone, web, type, capacity, GM name, personnel count, associated club member count, count of members with ≥1 FIFA game. Sort ascending by club member count.
+
+      Acceptance criteria: Correct counts via subqueries/joins on current (not historical) assignments; verified against seed data by hand.
+
+  - title: "QUERY-2 (ii): Major members with ≥1 FIFA game"
+    label: QUERY
+    body: |
+      Location name (current), membership #, name, age (computed from DOB), city, province, status (derived), total FIFA games played. Sort ascending by game count.
+
+      Acceptance criteria: Age computed via DATEDIFF/TIMESTAMPDIFF; status derived from prior-year payment total vs fee cap.
+
+  - title: "QUERY-3 (iii): Members with ≥4 hobbies"
+    label: QUERY
+    body: |
+      Same personal/location/status fields + hobby count. Sort descending by age, then ascending by location name.
+
+      Acceptance criteria: GROUP BY + HAVING COUNT(hobby) >= 4; correct tie-break sort.
+
+  - title: "QUERY-4 (iv): Major members with zero FIFA games"
+    label: QUERY
+    body: |
+      Location, membership #, name, age, city, province, status. Members with no rows in FIFAParticipation. Sort ascending by location, then age.
+      Acceptance criteria: Use LEFT JOIN + IS NULL or NOT EXISTS, not a subtraction of counts.
+
+  - title: "QUERY-5 (v): Member count by age, all locations"
+    label: QUERY
+    body: |
+      One row per age value, count of club members at that age across the whole club. Sort descending by age.
+      Acceptance criteria: GROUP BY computed age; verify totals sum to total club member count.
+
+  - title: "QUERY-6 (vi): Major members who are also family members"
+    label: QUERY
+    body: |
+      For each major club member who also appears as a FamilyMember, list every club member associated with them: their own name + associated member's number, name, DOB, SSN, Medicare#, phone, address, city, province, postal code, relationship type, status.
+
+      Acceptance criteria: Requires joining ClubMember → FamilyMember (matched, likely on SSN or a shared person link — clarify in ERD if FamilyMember and ClubMember of the same person are the same row or linked rows) → ClubMemberFamilyRelation → ClubMember (children). This is the trickiest query — flag the person-identity question in ERD-2 if not already resolved.
+
+  - title: "QUERY-7 (vii): Fees + donations, major members, 2023–2025"
+    label: QUERY
+    body: |
+      Description: Sum of membership fees paid and sum of donations (amount exceeding $200/year cap) for major members only, across payment years 2023–2025.
+
+      Acceptance criteria: Two aggregates: SUM(LEAST(payment, 200)) for fees, SUM(GREATEST(payment - 200, 0)) for donations, grouped/filtered correctly by payment year and member type at time of payment.
+
+  - title: "QUERY-8 (viii): Members with ≥4 FIFA games (all members)"
+    label: QUERY
+    body: |
+      <br>Description: Same as query ii but for all club members (not just major), threshold ≥4 games instead of ≥1. Sort ascending by location, then age.
+
+      Acceptance criteria: GROUP BY + HAVING COUNT(*) >= 4 on FIFAParticipation.
+
+  - title: "VERIFY-1: Run count checks"
+    label: VERIFY
+    body: |
+      Description: Execute SELECT COUNT(*) FROM R; for every table, save output to 04_verify.sql results / a text file for the report.
+      Acceptance criteria: Output captured and matches expected ≥10 rows per table.
+
+  - title: "REPORT-1: Assemble final PDF"
+    label: REPORT
+    body: |
+
+      Combine originality form (signed, cover page with Group Account # and all member names/IDs), ERD image, schema DDL with key/type rationale, all 8 query SQL + brief explanation each, and COUNT(*) results.
+
+      Acceptance criteria: Single PDF, uploaded to Moodle before July 24, 23:55.
