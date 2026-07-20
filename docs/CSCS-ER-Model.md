@@ -81,5 +81,3 @@ HELD_AT --> LOCATION
 - `<u>` Underlined + labeled "(partial key)" = weak entity's partial key (Depends on a strong owner)
 - Double-bordered diamond on `PLAYS` = identifying relationship for the weak entity FIFAGAME (it can't exist without a ClubMember).
 - `PhoneNumber` on Location is drawn as a multivalued attribute (oval), as a location may have multiple numbers.
-
-**Limitations:**
