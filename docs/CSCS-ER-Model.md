@@ -21,7 +21,7 @@ HOBBY["<b>HOBBY</b><br/><u>HobbyName</u>"]
 
 PAYMENT["<b>PAYMENT</b><br/><u>PaymentID</u><br/>PaymentDate, Amount,<br/>Method, DateOfPayment"]
 
-FIFAGAME["<b>FIFAGAME</b> (weak entity)<br/><u>GameID</u> (partial key)<br/>Team, Opponent, DateOfGame, FinalScore"]
+FIFAGAME["<b>FIFAGAME</b><br/><u>GameID</u><br/>Team, Opponent, DateOfGame, FinalScore"]
 
 %% ===== RELATIONSHIPS =====
 WORKS_AT{"WORKS_AT<br/>StartDate, EndDate"}
@@ -31,7 +31,7 @@ GUARDIAN{"GUARDIAN_OF<br/>Relation, StartDate, EndDate"}
 AT_LOC{"CURRENTLY_AT"}
 HAS_HOBBY{"HAS_HOBBY"}
 MAKES{"MAKES"}
-PLAYS{{"PLAYS (identifying)"}}
+PARTICIPATES{"PARTICIPATES_IN"}
 HELD_AT{"HELD_AT"}
 
 %% ===== EDGES: multivalued attr =====
@@ -65,9 +65,9 @@ HAS_HOBBY --- HOBBY
 PAYMENT --- MAKES
 MAKES --> CLUBMEMBER
 
-%% ===== EDGES: PLAYS (1:N identifying, ClubMember->FIFAGame) =====
-FIFAGAME --- PLAYS
-PLAYS --> CLUBMEMBER
+%% ===== EDGES: PARTICIPATES_IN (M:N, ClubMember<->FIFAGame) =====
+CLUBMEMBER --- PARTICIPATES
+PARTICIPATES --- FIFAGAME
 
 %% ===== EDGES: HELD_AT (N:1, FIFAGame->Location) =====
 FIFAGAME --- HELD_AT
@@ -83,7 +83,3 @@ HELD_AT --> LOCATION
 - `PhoneNumber` on Location is drawn as a multivalued attribute (oval), as a location may have multiple numbers.
 
 **Limitations:**
-
-The EMPLOYEE and MEMBER (family member) are seperate entities with duplicate attribute sets (SSN, name, contact, info, etc). However; if the same physical person is both an employee and a family member, then this will result in duplicate information and there would be no way to inforce the `same SSN = same person`.
-
-- To address this issue, we'll keep them seperate and accept the duplication risk.

@@ -122,13 +122,17 @@ PAYMENT (
 )
 
 FIFA_GAME (
-    [Int] GameID,          -- partial key (weak entity)
-    [Int] CMN FK -> CLUB_MEMBER(CMN),   -- owner entity, completes the key
+    [Int] GameID PK,
     [String] Team,
     [String] Opponent,
     [Date] DateOfGame,
     [Int] LID FK -> LOCATION(LID),
-    [String] FinalScore,
+    [String] FinalScore
+)
+
+FIFA_PARTICIPATION (
+    [Int] GameID FK -> FIFA_GAME(GameID),
+    [Int] CMN FK -> CLUB_MEMBER(CMN),
     PK (GameID, CMN)
 )
 ```
