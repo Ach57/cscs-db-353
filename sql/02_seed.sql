@@ -156,3 +156,108 @@ INSERT INTO FIFAParticipation (game_id, membership_number) VALUES
 (2, 3), (2, 4), (2, 8),        -- Game 2: Maxime, Camille, Emma
 (3, 5), (3, 6),                -- Game 3: Antoine, Laurie
 (4, 1), (4, 2), (4, 7);        -- Game 4: Thomas, Sophie, Gabriel again (repeat participants)
+
+
+-- =========================================================
+-- Additional seed data for testing Queries 3 and 4
+-- =========================================================
+
+-- =========================================
+-- Query 3 test data:
+-- Club Members with at least 4 hobbies
+-- =========================================
+
+-- Camille currently has hobbies 1, 2, and 4.
+-- Add hobbies 3 and 5, giving her 5 hobbies.
+INSERT INTO ClubMemberHobby (membership_number, hobby_id) VALUES
+(4, 3),
+(4, 5);
+
+-- Laurie currently has hobbies 1 and 3.
+-- Add hobbies 2, 4, and 5, giving her 5 hobbies.
+INSERT INTO ClubMemberHobby (membership_number, hobby_id) VALUES
+(6, 2),
+(6, 4),
+(6, 5);
+
+
+-- =========================================
+-- Query 4 test data:
+-- Add two major members with no FIFA participation
+-- =========================================
+
+INSERT INTO ClubMember (
+    membership_number,
+    location_id,
+    first_name,
+    last_name,
+    date_of_birth,
+    registration_date,
+    height_cm,
+    weight_kg,
+    ssn,
+    medicare_number,
+    phone_number,
+    address,
+    city,
+    province,
+    postal_code
+) VALUES
+(
+    9,
+    1,
+    'Alexandre',
+    'Gagnon',
+    '1998-08-14',
+    '2023-05-10',
+    181.00,
+    76.00,
+    'M100000009',
+    'GAGN98081499',
+    '514-555-3009',
+    '72 Rue Saint-Laurent',
+    'Montreal',
+    'QC',
+    'H2Y2Y2'
+),
+(
+    10,
+    3,
+    'Isabelle',
+    'Caron',
+    '2001-10-22',
+    '2024-02-15',
+    168.00,
+    59.00,
+    'M100000010',
+    'CARO01102299',
+    '450-555-3010',
+    '88 Rue Victoria',
+    'Longueuil',
+    'QC',
+    'J4K4K4'
+);
+
+INSERT INTO Payment (
+    payment_id,
+    membership_number,
+    payment_date,
+    amount,
+    payment_method,
+    membership_year,
+    installment_number
+) VALUES
+
+-- Camille: major member, owes $200, fully paid => Active
+(14, 4, '2025-02-20', 100.00, 'Debit', 2025, 1),
+(15, 4, '2025-06-20', 100.00, 'Debit', 2025, 2),
+
+-- Laurie: major by the end of 2025, owes $200,
+-- but paid only $100 => Inactive
+(16, 6, '2025-03-01', 100.00, 'Credit', 2025, 1),
+
+-- Alexandre: major member, fully paid $200 => Active
+(17, 9, '2025-05-10', 200.00, 'Debit', 2025, 1),
+
+-- Isabelle: major member, paid only $100 => Inactive
+(18, 10, '2025-04-15', 100.00, 'Cash', 2025, 1);
