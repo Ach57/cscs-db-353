@@ -232,6 +232,14 @@ ORDER BY
     location_name ASC,
     age ASC;
 
+-- QUERY-5 (v): total number of club members for every age
+SELECT
+    TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) AS age,
+    COUNT(*) AS total_club_members
+FROM ClubMember
+GROUP BY age
+ORDER BY age DESC;
+
 -- QUERY-6 (vi): Major members who are also family members
 SELECT
     cm.membership_number                         AS member_number,
