@@ -41,6 +41,18 @@ case "$1" in
     docker exec -i -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" cscs-db mysql -u root cscs < sql/04_verify.sql
     ;;
 
+  adminer-remote-start)
+    echo "Starting Adminer pointed at AITS (wqc353.encs.concordia.ca)..."
+    echo "Open http://localhost:8081 — login with your AITS DB user/password/db from the email."
+    echo "Requires Concordia VPN if you're off the ENCS network."
+    docker compose -f docker-compose.remote.yml up -d
+    ;;
+
+  adminer-remote-stop)
+    echo "Stopping remote Adminer..."
+    docker compose -f docker-compose.remote.yml down
+    ;;
+
   *)
     echo "Usage:"
     echo "  ./docker.sh start"
@@ -48,8 +60,10 @@ case "$1" in
     echo "  ./docker.sh restart"
     echo "  ./docker.sh reset"
     echo "  ./docker.sh logs"
-    echo "  ./docker.sh queries   # run 03_queries.sql, print results"
-    echo "  ./docker.sh verify    # run 04_verify.sql, print COUNT(*) per table"
+    echo "  ./docker.sh queries               # run 03_queries.sql, print results"
+    echo "  ./docker.sh verify                # run 04_verify.sql, print COUNT(*) per table"
+    echo "  ./docker.sh adminer-remote-start   # Adminer GUI pointed at AITS server (port 8081)"
+    echo "  ./docker.sh adminer-remote-stop"
     exit 1
     ;;
 esac

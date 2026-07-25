@@ -1,0 +1,12 @@
+services:
+  adminer-remote:
+    image: adminer
+    container_name: cscs-adminer-remote
+
+    environment:
+      ADMINER_DEFAULT_SERVER: wqc353.encs.concordia.ca
+
+    ports:
+      - "8081:8080"
+
+    restart: unless-stopped
