@@ -1,0 +1,35 @@
+services:
+  mysql:
+    image: mysql:9.2
+    container_name: wqc353_1-db
+
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+
+    ports:
+      - "3307:3306"
+
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./sql/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      - ./sql/02_seed.sql:/docker-entrypoint-initdb.d/02_seed.sql
+
+    restart: unless-stopped
+
+  adminer:
+    image: adminer
+    container_name: wqc353_1-adminer
+
+    ports:
+      - "8080:8080"
+
+    depends_on:
+      - mysql
+
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
