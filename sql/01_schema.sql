@@ -1,5 +1,7 @@
 -- Country Soccer Club System
 
+DROP DATABASE IF EXISTS wqc353_1;
+CREATE DATABASE wqc353_1;
 USE wqc353_1;
 
 CREATE TABLE Location (
