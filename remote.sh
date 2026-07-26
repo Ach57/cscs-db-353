@@ -8,10 +8,19 @@ fi
 
 export $(grep -v '^#' .env.remote | xargs)
 
+# AITS runs MySQL 8.0.22 and still uses the mysql_native_password auth
+# plugin for existing accounts. Modern local mysql clients (8.4+/9.x,
+# e.g. current Homebrew) no longer ship that plugin, so direct host
+# connections can fail with "Authentication plugin 'mysql_native_password'
+# cannot be loaded". Running the client inside a mysql:8.0 container
+# sidesteps this — it uses a client build old enough to still support it.
 run_sql() {
   local file="$1"
   echo "Running $file against $AITS_DB_HOST/$AITS_DB_NAME ..."
-  MYSQL_PWD="$AITS_DB_PASSWORD" mysql -h "$AITS_DB_HOST" -u "$AITS_DB_USER" "$AITS_DB_NAME" < "$file"
+  docker run --rm -i \
+    -e MYSQL_PWD="$AITS_DB_PASSWORD" \
+    mysql:8.0 \
+    mysql -h "$AITS_DB_HOST" -u "$AITS_DB_USER" "$AITS_DB_NAME" < "$file"
 }
 
 confirm_shared_db() {
@@ -51,7 +60,10 @@ case "${1:-}" in
     ;;
 
   connect)
-    MYSQL_PWD="$AITS_DB_PASSWORD" mysql -h "$AITS_DB_HOST" -u "$AITS_DB_USER" "$AITS_DB_NAME"
+    docker run --rm -it \
+      -e MYSQL_PWD="$AITS_DB_PASSWORD" \
+      mysql:8.0 \
+      mysql -h "$AITS_DB_HOST" -u "$AITS_DB_USER" "$AITS_DB_NAME"
     ;;
 
   *)
@@ -65,6 +77,7 @@ case "${1:-}" in
     echo ""
     echo "Requires .env.remote (copy .env.remote.example and fill in the password)."
     echo "Requires Concordia VPN if you're off the ENCS network."
+    echo "Requires Docker Desktop running (used to get a compatible mysql client)."
     exit 1
     ;;
 esac

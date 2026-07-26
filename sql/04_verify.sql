@@ -3,7 +3,7 @@
 -- SELECT COUNT(*) FROM R for every relation R in the database
 -- =========================================================
 
-USE cscs;
+USE wqc353_1;
 
 SELECT 'Location' AS table_name, COUNT(*) AS row_count FROM Location
 UNION ALL SELECT 'LocationPhone', COUNT(*) FROM LocationPhone
