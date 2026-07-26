@@ -32,13 +32,13 @@ case "$1" in
     ;;
 
   queries)
-    echo "Running sql/03_queries.sql against cscs-db..."
-    docker exec -i -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" cscs-db mysql -u root cscs < sql/03_queries.sql
+    echo "Running sql/03_queries.sql against wqc353_1-db..."
+    docker exec -i -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" wqc353_1-db mysql -u root wqc353_1 < sql/03_queries.sql
     ;;
 
   verify)
-    echo "Running sql/04_verify.sql against cscs-db..."
-    docker exec -i -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" cscs-db mysql -u root cscs < sql/04_verify.sql
+    echo "Running sql/04_verify.sql against wqc353_1..."
+    docker exec -i -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" wqc353_1-db mysql -u root wqc353_1 < sql/04_verify.sql
     ;;
 
   adminer-remote-start)

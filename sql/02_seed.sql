@@ -18,7 +18,14 @@ USE wqc353_1;
 INSERT INTO Location (location_id, location_type, name, address, city, province, postal_code, web_address, capacity) VALUES
 (1, 'Head',   'CSCS Head Office',   '100 Rue Sainte-Catherine', 'Montreal',   'QC', 'H2X1K4', 'https://cscs.ca',        500),
 (2, 'Branch', 'CSCS West Branch',   '450 Boulevard Curé-Labelle', 'Laval',    'QC', 'H7P2P2', 'https://west.cscs.ca',   200),
-(3, 'Branch', 'CSCS East Branch',   '25 Rue Saint-Charles',     'Longueuil',  'QC', 'J4H1E5', 'https://east.cscs.ca',   150);
+(3, 'Branch', 'CSCS East Branch',   '25 Rue Saint-Charles',     'Longueuil',  'QC', 'J4H1E5', 'https://east.cscs.ca',   150),
+(4,  'Branch', 'CSCS North Branch',    '200 Boulevard Laurentien',        'Saint-Laurent', 'QC', 'H4M2M2', 'https://north.cscs.ca',    175),
+(5,  'Branch', 'CSCS South Branch',    '300 Rue Taschereau',              'Brossard',      'QC', 'J4Y1A1', 'https://south.cscs.ca',    180),
+(6,  'Branch', 'CSCS Central Branch',  '500 Rue Sainte-Anne',             'Varennes',      'QC', 'J3X1P7', 'https://central.cscs.ca',  160),
+(7,  'Branch', 'CSCS Plateau Branch',  '80 Avenue du Mont-Royal E',       'Montreal',      'QC', 'H2T1P1', 'https://plateau.cscs.ca',  120),
+(8,  'Branch', 'CSCS Verdun Branch',   '5 Rue de Verdun',                 'Montreal',      'QC', 'H4G2M5', 'https://verdun.cscs.ca',   130),
+(9,  'Branch', 'CSCS Rive-Nord Branch','750 Chemin du Bas-de-la-Riviere', 'Terrebonne',    'QC', 'J6W1A3', 'https://rivenord.cscs.ca', 140),
+(10, 'Branch', 'CSCS Anjou Branch',    '7000 Rue Sherbrooke E',           'Montreal',      'QC', 'H1K1C5', 'https://anjou.cscs.ca',    110);
 
 -- =========================================
 -- Table: LocationPhone
@@ -27,7 +34,14 @@ INSERT INTO LocationPhone (location_id, phone_number) VALUES
 (1, '514-555-0100'),
 (1, '514-555-0101'),
 (2, '450-555-0200'),
-(3, '450-555-0300');
+(3, '450-555-0300'),
+(4, '450-555-0400'),
+(5, '450-555-0500'),
+(6, '450-555-0600'),
+(7, '514-555-0700'),
+(8, '514-555-0800'),
+(9, '450-555-0900'),
+(10, '514-566-0120');
 
 -- =========================================
 -- Table: Personnel
@@ -37,7 +51,12 @@ INSERT INTO Personnel (personnel_id, first_name, last_name, date_of_birth, ssn, 
 (2, 'Julie',   'Bouchard',  '1982-07-04', '222-222-222', 'BOUC82070499', '514-555-1002', '34 Avenue du Parc',  'Montreal',  'QC', 'H2B2B2', 'julie.bouchard@cscs.ca',  'Treasurer',        'Salaried'),
 (3, 'Simon',   'Roy',       '1990-11-23', '333-333-333', 'ROYS90112399', '450-555-1003', '56 Rue des Érables', 'Laval',     'QC', 'H7C3C3', 'simon.roy@cscs.ca',       'Coach',            'Volunteer'),
 (4, 'Nadia',   'Cormier',   '1988-01-30', '444-444-444', 'CORM88013099', '450-555-1004', '78 Rue de la Gare',  'Longueuil', 'QC', 'J4D4D4', 'nadia.cormier@cscs.ca',   'Secretary',        'Volunteer'),
-(5, 'Eric',    'Fortin',    '1995-05-17', '555-555-555', 'FORT95051799', '514-555-1005', '90 Rue Saint-Denis', 'Montreal',  'QC', 'H2E5E5', 'eric.fortin@cscs.ca',     'Assistant Coach',  'Volunteer');
+(5, 'Eric',    'Fortin',    '1995-05-17', '555-555-555', 'FORT95051799', '514-555-1005', '90 Rue Saint-Denis', 'Montreal',  'QC', 'H2E5E5', 'eric.fortin@cscs.ca',     'Assistant Coach',  'Volunteer'),
+(6,  'Luc',       'Gauthier',  '1985-06-14', '601-111-111', 'GAUT85061499', '514-555-1006', '22 Rue Masson',       'Montreal',   'QC', 'H2S2S2', 'luc.gauthier@cscs.ca',     'Deputy Manager', 'Salaried'),
+(7,  'Isabeau',   'Pelletier', '1992-08-20', '602-111-111', 'PELL92082099', '514-555-1007', '63 Rue Beaubien',     'Montreal',   'QC', 'H2G3G3', 'isabeau.pelletier@cscs.ca','Captain',         'Volunteer'),
+(8,  'Francois',  'Lapointe',  '1987-04-05', '603-111-111', 'LAPO87040599', '450-555-1008', '15 Rue Joliette',     'Brossard',   'QC', 'J4X4X4', 'francois.lapointe@cscs.ca','Administrator',  'Salaried'),
+(9,  'Marie-Eve', 'Ouellet',   '1993-12-11', '604-111-111', 'OUEL93121199', '450-555-1009', '88 Rue des Saules',   'Terrebonne', 'QC', 'J6W2W2', 'marieeve.ouellet@cscs.ca', 'Coach',           'Salaried'),
+(10, 'David',     'Cloutier',  '1980-09-03', '605-111-111', 'CLOU80090399', '514-555-1010', '44 Rue Notre-Dame O', 'Montreal',   'QC', 'H3C3C3', 'david.cloutier@cscs.ca',   'Secretary',       'Volunteer');
 
 -- =========================================
 -- Table: PersonnelAssignment
@@ -48,7 +67,11 @@ INSERT INTO PersonnelAssignment (assignment_id, personnel_id, location_id, start
 (3, 3, 2, '2021-03-15', NULL),        -- current Coach at West branch
 (4, 4, 3, '2022-02-01', NULL),        -- current Secretary at East branch
 (5, 5, 2, '2018-09-01', '2021-03-01'),-- past Assistant Coach assignment at West branch
-(6, 5, 3, '2021-03-16', NULL);        -- same person, now current at East branch
+(6, 5, 3, '2021-03-16', NULL),        -- same person, now current at East branch
+(7,  6,  1, '2022-01-10', NULL),   -- Luc: Deputy Manager at Head office
+(8,  7,  4, '2023-03-01', NULL),   -- Isabeau: Captain at North branch
+(9,  8,  5, '2023-07-15', NULL),   -- Francois: Administrator at South branch
+(10, 9,  6, '2024-01-01', NULL);   -- Marie-Eve: Coach at Central branch
 
 -- =========================================
 -- Table: FamilyMember
@@ -57,7 +80,13 @@ INSERT INTO FamilyMember (family_member_id, first_name, last_name, date_of_birth
 (1, 'Denise',  'Lavoie',   '1970-04-08', '666-666-666', 'LAVO70040899', '514-555-2001', '15 Rue Sherbrooke', 'Montreal',  'QC', 'H2F6F6', 'denise.lavoie@email.com'),
 (2, 'Patrick', 'Girard',   '1972-09-19', '777-777-777', 'GIRA72091999', '450-555-2002', '27 Rue Lévis',      'Laval',     'QC', 'H7G7G7', 'patrick.girard@email.com'),
 (3, 'Chantal', 'Bergeron', '1980-12-01', '888-888-888', 'BERG80120199', '450-555-2003', '39 Rue Fournier',   'Longueuil', 'QC', 'J4H8H8', 'chantal.bergeron@email.com'),
-(4, 'Alain',   'Morin',    '1978-06-25', '999-999-999', 'MORI78062599', '514-555-2004', '41 Rue Rachel',     'Montreal',  'QC', 'H2I9I9', 'alain.morin@email.com');
+(4, 'Alain',   'Morin',    '1978-06-25', '999-999-999', 'MORI78062599', '514-555-2004', '41 Rue Rachel',     'Montreal',  'QC', 'H2I9I9', 'alain.morin@email.com'),
+(5,  'Robert',  'Tremblay', '1965-07-14', '101-010-101', 'TREM65071499', '514-555-2005', '72 Rue Beaubien',       'Montreal',   'QC', 'H2G3G3', 'robert.tremblay@email.com'),
+(6,  'Martine', 'Gagnon',   '1973-02-28', '202-020-202', 'GAGN73022899', '450-555-2006', '100 Rue du Boise',      'Laval',      'QC', 'H7R5R5', 'martine.gagnon@email.com'),
+(7,  'Louis',   'Bedard',   '1968-11-09', '303-030-303', 'BEDA68110999', '450-555-2007', '55 Rue des Tilleuls',   'Longueuil',  'QC', 'J4L7L7', 'louis.bedard@email.com'),
+(8,  'Sylvie',  'Charron',  '1975-05-03', '404-040-404', 'CHAR75050399', '514-555-2008', '18 Cote-des-Neiges',    'Montreal',   'QC', 'H3H1A1', 'sylvie.charron@email.com'),
+(9,  'Pierre',  'Beaumont', '1969-08-16', '505-050-505', 'BEAU69081699', '450-555-2009', '33 Rue Edouard',        'Brossard',   'QC', 'J4Y2Y2', 'pierre.beaumont@email.com'),
+(10, 'Helene',  'Leblanc',  '1977-03-22', '606-060-606', 'LEBL77032299', '514-555-2010', '90 Boulevard Decarie',  'Montreal',   'QC', 'H4L3L3', 'helene.leblanc@email.com');
 
 -- =========================================
 -- Table: FamilyMemberAssignment
@@ -66,7 +95,13 @@ INSERT INTO FamilyMemberAssignment (assignment_id, family_member_id, location_id
 (1, 1, 1, '2020-01-10', NULL),
 (2, 2, 2, '2021-04-01', NULL),
 (3, 3, 3, '2022-05-15', NULL),
-(4, 4, 1, '2019-08-01', '2023-01-01');
+(4, 4, 1, '2019-08-01', '2023-01-01'),
+(5,  5,  4, '2023-03-01', NULL),
+(6,  6,  2, '2021-09-15', NULL),
+(7,  7,  3, '2022-11-01', NULL),
+(8,  8,  5, '2023-08-20', NULL),
+(9,  9,  1, '2024-01-05', NULL),
+(10, 10, 6, '2024-03-10', NULL);
 
 -- =========================================
 -- Table: ClubMember
@@ -78,8 +113,10 @@ INSERT INTO ClubMember (membership_number, location_id, first_name, last_name, d
 (4, 2, 'Camille', 'Dubois',   '2005-03-19', '2020-02-20', 170.00, 60.00, 'M100000004', 'DUBO05031999', '450-555-3004', '10 Rue des Pins',   'Laval',     'QC', 'H7L2L2'),
 (5, 3, 'Antoine', 'Bergeron', '2012-09-08', '2023-06-10', 140.00, 36.00, 'M100000005', 'BERG12090899', '450-555-3005', '39 Rue Fournier',   'Longueuil', 'QC', 'J4H8H8'),
 (6, 3, 'Laurie',  'Pelletier','2007-12-25', '2021-11-01', 158.00, 48.00, 'M100000006', 'PELL07122599', '450-555-3006', '5 Rue Curé-Poirier','Longueuil', 'QC', 'J4J3J3'),
-(7, 1, 'Gabriel', 'Morin',    '2006-04-17', '2020-09-01', 168.00, 58.00, 'M100000007', 'MORI06041799', '514-555-3007', '41 Rue Rachel',     'Montreal',  'QC', 'H2I9I9'),
-(8, 2, 'Emma',    'Roy',      '2013-01-05', '2024-01-20', 135.00, 32.00, 'M100000008', 'ROYE13010599', '450-555-3008', '56 Rue des Érables','Laval',     'QC', 'H7C3C3');
+(7, 1, 'Gabriel',   'Morin',    '2006-04-17', '2020-09-01', 168.00, 58.00, 'M100000007', 'MORI06041799', '514-555-3007', '41 Rue Rachel',        'Montreal',  'QC', 'H2I9I9'),
+(8, 2, 'Emma',      'Roy',      '2013-01-05', '2024-01-20', 135.00, 32.00, 'M100000008', 'ROYE13010599', '450-555-3008', '56 Rue des Érables',   'Laval',     'QC', 'H7C3C3'),
+(9, 1, 'Alexandre', 'Gagnon',   '1998-08-14', '2023-05-10', 181.00, 76.00, 'M100000009', 'GAGN98081499', '514-555-3009', '72 Rue Saint-Laurent',  'Montreal',  'QC', 'H2Y2Y2'),
+(10,3, 'Isabelle',  'Caron',    '2001-10-22', '2024-02-15', 168.00, 59.00, 'M100000010', 'CARO01102299', '450-555-3010', '88 Rue Victoria',       'Longueuil', 'QC', 'J4K4K4');
 
 -- =========================================
 -- Table: ClubMemberFamilyRelation
@@ -88,7 +125,14 @@ INSERT INTO ClubMemberFamilyRelation (relation_id, membership_number, family_mem
 (1, 1, 1, 'Mother', '2022-08-01', NULL),
 (2, 3, 2, 'Father',  '2023-01-15', NULL),
 (3, 5, 3, 'Mother',  '2023-06-10', NULL),
-(4, 7, 4, 'Father',  '2020-09-01', NULL);
+(4, 7, 4, 'Father',  '2020-09-01', NULL),
+(5,  2,  5,  'Father', '2021-09-05', NULL),  
+(6,  4,  6,  'Mother', '2020-02-20', NULL),  
+(7,  6,  7,  'Father', '2021-11-01', NULL),  
+(8,  8,  8,  'Mother', '2024-01-20', NULL),  
+(9,  9,  9,  'Father', '2023-05-10', NULL),  
+(10, 10, 10, 'Mother', '2024-02-15', NULL);  
+
 
 -- =========================================
 -- Table: Hobby
@@ -98,7 +142,12 @@ INSERT INTO Hobby (hobby_id, hobby_name) VALUES
 (2, 'Swimming'),
 (3, 'Video Games'),
 (4, 'Music'),
-(5, 'Chess');
+(5, 'Chess'),
+(6,  'Painting'),
+(7,  'Cycling'),
+(8,  'Cooking'),
+(9,  'Photography'),
+(10, 'Dancing');
 
 -- =========================================
 -- Table: ClubMemberHobby
@@ -146,7 +195,13 @@ INSERT INTO FIFAGame (game_id, location_id, team_name, opponent_name, game_date,
 (1, 1, 'CSCS Head Office', 'Montreal United',   '2024-03-10', 3, 1),
 (2, 2, 'CSCS West Branch', 'Laval Rovers',       '2024-04-05', 2, 2),
 (3, 3, 'CSCS East Branch', 'Longueuil FC',       '2024-05-12', 1, 4),
-(4, 1, 'CSCS Head Office', 'South Shore Kickers','2024-06-20', 5, 0);
+(4, 1, 'CSCS Head Office', 'South Shore Kickers','2024-06-20', 5, 0),
+(5,  4, 'CSCS North Branch',   'Pointe-Claire FC',   '2024-07-14', 2, 1),
+(6,  5, 'CSCS South Branch',   'Brossard United',    '2024-08-03', 0, 3),
+(7,  2, 'CSCS West Branch',    'Laval Stars',        '2024-09-21', 4, 2),
+(8,  1, 'CSCS Head Office',    'Outremont Athletic', '2024-10-05', 1, 1),
+(9,  3, 'CSCS East Branch',    'Greenfield Park SC', '2024-11-02', 3, 0),
+(10, 6, 'CSCS Central Branch', 'Varennes City FC',   '2024-12-07', 2, 2);
 
 -- =========================================
 -- Table: FIFAParticipation
@@ -155,8 +210,13 @@ INSERT INTO FIFAParticipation (game_id, membership_number) VALUES
 (1, 1), (1, 2), (1, 7),        -- Game 1: Thomas, Sophie, Gabriel
 (2, 3), (2, 4), (2, 8),        -- Game 2: Maxime, Camille, Emma
 (3, 5), (3, 6),                -- Game 3: Antoine, Laurie
-(4, 1), (4, 2), (4, 7);        -- Game 4: Thomas, Sophie, Gabriel again (repeat participants)
-
+(4, 1), (4, 2), (4, 7),        -- Game 4: Thomas, Sophie, Gabriel again (repeat participants)
+(5, 3),  (5, 4),  (5, 8),          -- Game 5: Maxime, Camille, Emma
+(6, 5),  (6, 6),  (6, 9),          -- Game 6: Antoine, Laurie, Alexandre
+(7, 1),  (7, 3),  (7, 4),          -- Game 7: Thomas, Maxime, Camille
+(8, 2),  (8, 6),  (8, 10),         -- Game 8: Sophie, Laurie, Isabelle
+(9, 7),  (9, 8),  (9, 9),          -- Game 9: Gabriel, Emma, Alexandre
+(10, 1), (10, 5), (10, 10);        -- Game 10: Thomas, Antoine, Isabelle
 
 -- =========================================================
 -- Additional seed data for testing Queries 3 and 4
@@ -183,61 +243,7 @@ INSERT INTO ClubMemberHobby (membership_number, hobby_id) VALUES
 
 -- =========================================
 -- Query 4 test data:
--- Add two major members with no FIFA participation
 -- =========================================
-
-INSERT INTO ClubMember (
-    membership_number,
-    location_id,
-    first_name,
-    last_name,
-    date_of_birth,
-    registration_date,
-    height_cm,
-    weight_kg,
-    ssn,
-    medicare_number,
-    phone_number,
-    address,
-    city,
-    province,
-    postal_code
-) VALUES
-(
-    9,
-    1,
-    'Alexandre',
-    'Gagnon',
-    '1998-08-14',
-    '2023-05-10',
-    181.00,
-    76.00,
-    'M100000009',
-    'GAGN98081499',
-    '514-555-3009',
-    '72 Rue Saint-Laurent',
-    'Montreal',
-    'QC',
-    'H2Y2Y2'
-),
-(
-    10,
-    3,
-    'Isabelle',
-    'Caron',
-    '2001-10-22',
-    '2024-02-15',
-    168.00,
-    59.00,
-    'M100000010',
-    'CARO01102299',
-    '450-555-3010',
-    '88 Rue Victoria',
-    'Longueuil',
-    'QC',
-    'J4K4K4'
-);
-
 INSERT INTO Payment (
     payment_id,
     membership_number,
