@@ -1,8 +1,6 @@
 -- Country Soccer Club System
 
-DROP DATABASE IF EXISTS cscs;
-CREATE DATABASE cscs;
-USE cscs;
+USE wqc353_1;
 
 CREATE TABLE Location (
     location_id INT AUTO_INCREMENT PRIMARY KEY,

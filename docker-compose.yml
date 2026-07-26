@@ -1,7 +1,7 @@
 services:
   mysql:
     image: mysql:9.2
-    container_name: cscs-db
+    container_name: wqc353_1-db
 
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
@@ -21,7 +21,7 @@ services:
 
   adminer:
     image: adminer
-    container_name: cscs-adminer
+    container_name: wqc353_1-adminer
 
     ports:
       - "8080:8080"

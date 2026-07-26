@@ -10,7 +10,7 @@
 -- Location -> FIFAGame -> FIFAParticipation
 -- =========================================================
 
-USE cscs;
+USE wqc353_1;
 
 -- =========================================
 -- Table: Location
