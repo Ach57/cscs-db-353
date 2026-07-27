@@ -86,7 +86,13 @@ INSERT INTO FamilyMember (family_member_id, first_name, last_name, date_of_birth
 (7,  'Louis',   'Bedard',   '1968-11-09', '303-030-303', 'BEDA68110999', '450-555-2007', '55 Rue des Tilleuls',   'Longueuil',  'QC', 'J4L7L7', 'louis.bedard@email.com'),
 (8,  'Sylvie',  'Charron',  '1975-05-03', '404-040-404', 'CHAR75050399', '514-555-2008', '18 Cote-des-Neiges',    'Montreal',   'QC', 'H3H1A1', 'sylvie.charron@email.com'),
 (9,  'Pierre',  'Beaumont', '1969-08-16', '505-050-505', 'BEAU69081699', '450-555-2009', '33 Rue Edouard',        'Brossard',   'QC', 'J4Y2Y2', 'pierre.beaumont@email.com'),
-(10, 'Helene',  'Leblanc',  '1977-03-22', '606-060-606', 'LEBL77032299', '514-555-2010', '90 Boulevard Decarie',  'Montreal',   'QC', 'H4L3L3', 'helene.leblanc@email.com');
+(10, 'Helene',  'Leblanc',  '1977-03-22', '606-060-606', 'LEBL77032299', '514-555-2010', '90 Boulevard Decarie',  'Montreal',   'QC', 'H4L3L3', 'helene.leblanc@email.com'),
+-- Rows 11-12 deliberately reuse the SSNs of existing MAJOR ClubMembers
+-- (Alexandre Gagnon, Isabelle Caron) to represent the same real person
+-- appearing both as a paying major club member AND as a guardian of a
+-- minor member. This is the overlap Query (vi) requires.
+(11, 'Alexandre', 'Gagnon', '1998-08-14', 'M100000009', 'GAGN98081499', '514-555-3009', '72 Rue Saint-Laurent', 'Montreal',  'QC', 'H2Y2Y2', 'alexandre.gagnon@email.com'),
+(12, 'Isabelle',  'Caron',  '2001-10-22', 'M100000010', 'CARO01102299', '450-555-3010', '88 Rue Victoria',      'Longueuil', 'QC', 'J4K4K4', 'isabelle.caron@email.com');
 
 -- =========================================
 -- Table: FamilyMemberAssignment
@@ -101,7 +107,9 @@ INSERT INTO FamilyMemberAssignment (assignment_id, family_member_id, location_id
 (7,  7,  3, '2022-11-01', NULL),
 (8,  8,  5, '2023-08-20', NULL),
 (9,  9,  1, '2024-01-05', NULL),
-(10, 10, 6, '2024-03-10', NULL);
+(10, 10, 6, '2024-03-10', NULL),
+(11, 11, 1, '2023-05-10', NULL),  -- Alexandre Gagnon, at Head office
+(12, 12, 3, '2024-02-15', NULL);  -- Isabelle Caron, at East branch
 
 -- =========================================
 -- Table: ClubMember
@@ -131,7 +139,9 @@ INSERT INTO ClubMemberFamilyRelation (relation_id, membership_number, family_mem
 (7,  6,  7,  'Father', '2021-11-01', NULL),  
 (8,  8,  8,  'Mother', '2024-01-20', NULL),  
 (9,  9,  9,  'Father', '2023-05-10', NULL),  
-(10, 10, 10, 'Mother', '2024-02-15', NULL);  
+(10, 10, 10, 'Mother', '2024-02-15', NULL),
+(11, 1,  11, 'Father', '2023-05-10', NULL),  -- Alexandre Gagnon is Thomas's father
+(12, 3,  12, 'Mother', '2024-02-15', NULL);  -- Isabelle Caron is Maxime's mother
 
 
 -- =========================================
@@ -212,11 +222,16 @@ INSERT INTO FIFAParticipation (game_id, membership_number) VALUES
 (3, 5), (3, 6),                -- Game 3: Antoine, Laurie
 (4, 1), (4, 2), (4, 7),        -- Game 4: Thomas, Sophie, Gabriel again (repeat participants)
 (5, 3),  (5, 4),  (5, 8),          -- Game 5: Maxime, Camille, Emma
-(6, 5),  (6, 6),  (6, 9),          -- Game 6: Antoine, Laurie, Alexandre
+(6, 5),  (6, 6),                   -- Game 6: Antoine, Laurie
 (7, 1),  (7, 3),  (7, 4),          -- Game 7: Thomas, Maxime, Camille
-(8, 2),  (8, 6),  (8, 10),         -- Game 8: Sophie, Laurie, Isabelle
-(9, 7),  (9, 8),  (9, 9),          -- Game 9: Gabriel, Emma, Alexandre
-(10, 1), (10, 5), (10, 10);        -- Game 10: Thomas, Antoine, Isabelle
+(8, 2),  (8, 6),                   -- Game 8: Sophie, Laurie
+(9, 7),  (9, 8),                   -- Game 9: Gabriel, Emma
+(10, 1), (10, 5),                  -- Game 10: Thomas, Antoine
+(2, 2);                            -- Sophie also played Game 2 -> 4 games total
+-- Alexandre (9) and Isabelle (10) are deliberately NOT in any game: they
+-- are the two major club members Query (iv) needs (major, never played
+-- FIFA). Sophie now has 4 games (1,2,4,8), joining Thomas (4 games) so
+-- Query (viii) has the required minimum of two qualifying rows.
 
 -- =========================================================
 -- Additional seed data for testing Queries 3 and 4
