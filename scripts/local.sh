@@ -1,5 +1,19 @@
 #!/bin/bash
 
+# ---------------------------------------------
+# IMPORTANT! READ FIRST BEFORE RUNNING.
+# ONLY USE THIS SCRIPT TO LOCALLY HOST YOUR SERVERS.
+# THIS SCRIPT WILL HOST TWO SERVERS
+#   - mysql:9.2 RUNNING ON 3307:3306
+#   - Adminer RUNNING ON 8080:8080
+# FOR MORE CHECK ./docker-compose.yml
+# ---------------------------------------------
+
+# CMDS: start, stop, restart, reset, logs, queries, verify
+# SPECIAL CMDS: 
+#         - adminer-remote-start (Adminer GUI pointed at AITS server (port 8081))
+#         - adminer-remote-stop
+
 if [ -f .env ]; then
   export $(grep -v '^#' .env | xargs)
 fi

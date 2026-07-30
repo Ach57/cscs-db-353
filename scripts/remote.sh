@@ -1,4 +1,13 @@
 #!/bin/bash
+
+# ---------------------------------------------
+# IMPORTANT! READ FIRST BEFORE RUNNING.
+# ONLY USE THIS SCRIPT WHEN CONNECTING TO THE AITS SERVICE
+# FOR MORE CHECK ./docker-compose.remote.yml
+# ---------------------------------------------
+
+# CMDS: connect, schema, seed, setup, queries, verify
+
 set -euo pipefail
 
 if [ ! -f .env.remote ]; then
