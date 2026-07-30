@@ -1,158 +1,247 @@
 # =============================================================================
 # issues.yml
-# Data source for create-issues.sh.
-# Edit this file to change repo, project, labels, or issue content.
-# The script contains no magic strings — everything lives here.
+# Data source for create-issues.sh — CSCS Main Project
 # =============================================================================
 
 config:
   repo: "Ach57/cscs-db-353"
   project: "cscs-db-353"
 
-# Labels that must exist before issues are created.
 labels:
   - name: ERD
     description: "Entity Relation Diagram"
     color: "db3c0b"
+  - name: NORM
+    description: "Normalization / BCNF analysis"
+    color: "f9c74f"
   - name: DDL
-    description: "Data Definition Diagram"
+    description: "Data Definition"
     color: "bc69e6"
+  - name: TRIGGER
+    description: "DB triggers"
+    color: "e63946"
   - name: SEED
-    description: "Initial data to populated"
+    description: "Initial data to populate"
     color: "add8e6"
+  - name: OPS
+    description: "CRUD / transaction operations"
+    color: "43aa8b"
   - name: QUERY
-    description: "a request of information"
+    description: "Reporting query"
     color: "88eb2d"
+  - name: GUI
+    description: "Web interface"
+    color: "277da1"
+  - name: EMAIL
+    description: "Automated email + log"
+    color: "f3722c"
+  - name: INTEGRITY
+    description: "Integrity/constraint demo"
+    color: "9b5de5"
   - name: VERIFY
-    description: "verification"
+    description: "Verification"
     color: "2d86eb"
   - name: REPORT
     description: "Reporting section"
     color: "eb2dd5"
 
-# Issues to create, in order. Each entry needs: title, label, body.
 issues:
-  - title: "ERD-1: Draft E/R diagram from spec, identify entities/relationships/cardinalities"
+  - title: "ERD-3: Extend ERD with Team, TeamFormation, Assignment, FIFA*, EmailLog"
     label: ERD
     body: |
-      Model all entities from the CSCS spec: Location, Personnel, FamilyMember, ClubMember, Hobby, Payment, FIFAGame, plus any weak/associative entities needed for time-based relationships (Personnel↔Location history, ClubMember↔FamilyMember history) and many-to-many links (ClubMember↔Hobby, FIFAGame participation).
-      Must capture:
+      Add new entities to the warm-up ERD: Team, TeamFormation, TeamFormationAssignment, FIFAGame, FIFAParticipation, EmailLog.
 
-      - Location: type (Head/Branch), address fields, phone(s), web, capacity
-      - Personnel: role (Admin/Captain/Coach/Assistant Coach/Other), mandate (volunteer/salaried), one role at a time, unique SSN (not null), unique Medicare#
-      - FamilyMember: same contact fields as Personnel, one location at a time but movable over time
-      - ClubMember: global auto-increment membership #, major/minor (derived from DOB), min age 4 at registration
-      - Cardinality arrows: General Manager 1:1 Head Location = President; Personnel N:1 Location per time period; ClubMember N:1 FamilyMember per time period (minors only); ClubMember N:M Hobby; ClubMember N:M FIFAGame (with team/opponent/score/date/location context)
+      Acceptance criteria: All new entities/relationships added with keys and cardinalities; boys/girls team constraint and 3-hour conflict rule noted as business rules (not enforceable in the diagram itself).
 
-      Acceptance criteria: 
-      Every noun in the spec has a home in the diagram; 
-      all keys underlined; all N:M and time-based relationships resolved into explicit associative entities (not just crow's foot notes).
-
-  - title: "ERD-2: Group review of ERD"
+  - title: "ERD-4: Group review of extended ERD"
     label: ERD
     body: |
-      Walk the diagram against the spec line-by-line as a group before touching SQL. Specifically resolve:
+      Walk the extended diagram against the spec as a group. Resolve open questions before DDL.
 
-      - How Personnel-at-Location history is modeled (separate PersonnelAssignment table with start_date/end_date, nullable end_date = active)
-      - How FamilyMember-at-Location is modeled (same pattern)
-      - How ClubMember-FamilyMember relationship + relationship_type is modeled over time
-      - Confirm "active/inactive" status is NOT a stored column — it's derived from payment history
-      - Confirm "donation" is NOT a stored column — it's derived from payments exceeding the fee cap
+      Acceptance criteria: Signed-off ERD, no open questions.
 
-      Acceptance criteria: Signed-off ERD, no open questions, ready to convert to DDL.
+  - title: "NORM-1: 3NF / BCNF analysis"
+    label: NORM
+    body: |
+      For every relation (old + new), confirm 3NF. Check BCNF; where not in BCNF, explain why and show 3NF still holds.
 
-  - title: "DDL-1: Write 01_schema.sql"
+      Acceptance criteria: Written analysis per relation, ready to paste into report.
+
+  - title: "DDL-3: Extend 01_schema.sql"
     label: DDL
     body: |
-      Convert the reviewed ERD into MySQL CREATE TABLE statements. Minimum 7 relations plus supporting tables:
+      Add CREATE TABLE statements for Team, TeamFormation, TeamFormationAssignment, FIFAGame, FIFAParticipation, EmailLog.
 
-      - `Location`, `Personnel`, `PersonnelAssignment`, `FamilyMember`, `FamilyMemberAssignment`, `ClubMember`, `ClubMemberFamilyRelation`, `Hobby`, `ClubMemberHobby`, `Payment`, `FIFAGame`, `FIFAParticipation`
-      Constraints to enforce at the DB level:
-      - `SSN` NOT NULL + UNIQUE on Personnel and FamilyMember
-      - `MedicareNumber` UNIQUE on Personnel and FamilyMember
-      - `FK` from Personnel.role to a role reference (or CHECK/ENUM)
-      - `FK` from Payment.mandate/method to ENUM (Cash/Debit/Credit)
-      - `Membership` # as AUTO_INCREMENT PRIMARY KEY on ClubMember, global not per-location
-      - Appropriate data types (DATE for DOB/dates, DECIMAL for money, not FLOAT)
+      Acceptance criteria: Script runs clean on top of warm-up schema, no orphaned FKs, keys/types documented.
 
-      Acceptance criteria: Script runs clean on empty MySQL DB, no orphaned FKs, keys/types documented in report.
-
-  - title: "DDL-2: Peer review schema against spec constraints"
+  - title: "DDL-4: Peer review extended schema"
     label: DDL
     body: |
-      Second teammate checks 01_schema.sql line-by-line against every "must," "cannot," "no two X can have the same Y" in the spec. Produce a checklist comment on the PR confirming each constraint is enforced (not just assumed).
+      Second teammate checks new tables against spec constraints (role exclusivity, boys/girls, unique keys, etc.).
 
-      Acceptance criteria: PR approved with checklist attached; any missing constraint gets a follow-up commit before merge.
+      Acceptance criteria: PR approved with checklist; gaps get a follow-up commit before merge.
 
-  - title: "SEED-1: Write 02_seed.sql"
+  - title: "TRIGGER-1: Formation conflict trigger"
+    label: TRIGGER
+    body: |
+      Reject a club member assignment to a formation if they're already assigned same day with less than 3 hours between start times.
+
+      Acceptance criteria: BEFORE INSERT/UPDATE trigger; tested with a passing and a rejected case.
+
+  - title: "SEED-2: Extend seed data"
     label: SEED
     body: |
-      Description: Populate every table with ≥10 realistic rows. Data must be deliberately shaped so each of the 8 queries returns ≥2 rows — e.g. need club members with ≥4 hobbies, members with ≥4 FIFA games, major members who are also family members, members with unpaid prior-year fees (for inactive status), payments that exceed the fee cap (for donation calc).
+      Add rows for teams, formations, assignments, FIFA games/participation, email log — enough to make every query below return ≥5 rows.
 
-  - title: "QUERY-1 (i): Location details report"
+      Acceptance criteria: Every new table ≥10 rows, shaped to satisfy all query thresholds.
+
+  - title: "OPS-1: Location CRUD"
+    label: OPS
+    body: |
+      Create/Delete/Edit/Display a Location.
+      Acceptance criteria: All 4 operations work and are wired to the GUI.
+
+  - title: "OPS-2: Personnel CRUD"
+    label: OPS
+    body: |
+      Create/Delete/Edit/Display a Personnel.
+      Acceptance criteria: All 4 operations work; SSN/Medicare# uniqueness enforced.
+
+  - title: "OPS-3: FamilyMember CRUD"
+    label: OPS
+    body: |
+      Create/Delete/Edit/Display a FamilyMember (Primary/Secondary).
+      Acceptance criteria: All 4 operations work and are wired to the GUI.
+
+  - title: "OPS-4: ClubMember CRUD"
+    label: OPS
+    body: |
+      Create/Delete/Edit/Display a ClubMember (Major/Minor).
+      Acceptance criteria: Minor requires a linked FamilyMember; min age 4 enforced.
+
+  - title: "OPS-5: TeamFormation CRUD"
+    label: OPS
+    body: |
+      Create/Delete/Edit/Display a TeamFormation.
+      Acceptance criteria: Boys/girls homogeneity enforced on save.
+
+  - title: "OPS-6: Assign club member to a team formation"
+    label: OPS
+    body: |
+      Assign/Delete/Edit a club member to a formation. Test with a conflicting same-day assignment (< 3hr gap) and confirm rejection.
+
+      Acceptance criteria: Conflict case demonstrably rejected via TRIGGER-1.
+
+  - title: "OPS-7: Make payment for a club member"
+    label: OPS
+    body: |
+      Record a payment (date, amount, method, membership year).
+      Acceptance criteria: Fee/donation split correct on save (excess over cap = donation, computed not stored).
+
+  - title: "QUERY-8: Locations with ≥2 FIFA participants"
     label: QUERY
     body: |
-      Per location — address, city, province, postal code, phone, web, type, capacity, GM name, personnel count, associated club member count, count of members with ≥1 FIFA game. Sort ascending by club member count.
+      Location details + GM name, minor/major member counts, FIFA participant count. Sort descending by FIFA participant count.
+      Acceptance criteria: Correct counts on current (non-historical) data; verified by hand against seed data.
 
-      Acceptance criteria: Correct counts via subqueries/joins on current (not historical) assignments; verified against seed data by hand.
-
-  - title: "QUERY-2 (ii): Major members with ≥1 FIFA game"
+  - title: "QUERY-9: Primary family members with ≥2 FIFA-participating children"
     label: QUERY
     body: |
-      Location name (current), membership #, name, age (computed from DOB), city, province, status (derived), total FIFA games played. Sort ascending by game count.
+      Family member name + for each qualifying child: membership #, name, DOB, relationship. Sort ascending by first name then last name.
+      Acceptance criteria: HAVING COUNT ≥ 2 on FIFA participants per family member.
 
-      Acceptance criteria: Age computed via DATEDIFF/TIMESTAMPDIFF; status derived from prior-year payment total vs fee cap.
-
-  - title: "QUERY-3 (iii): Members with ≥4 hobbies"
+  - title: "QUERY-10: Team formations for a location and date range"
     label: QUERY
     body: |
-      Same personal/location/status fields + hobby count. Sort descending by age, then ascending by location name.
+      Head coach, session start time, address, type (training/game), team name, score, roster with roles. Sort ascending by start time.
+      Acceptance criteria: Score null for future sessions; date range parameterized.
 
-      Acceptance criteria: GROUP BY + HAVING COUNT(hobby) >= 4; correct tie-break sort.
-
-  - title: "QUERY-4 (iv): Major members with zero FIFA games"
+  - title: "QUERY-11: Members with ≥5 FIFA games"
     label: QUERY
     body: |
-      Location, membership #, name, age, city, province, status. Members with no rows in FIFAParticipation. Sort ascending by location, then age.
-      Acceptance criteria: Use LEFT JOIN + IS NULL or NOT EXISTS, not a subtraction of counts.
+      Membership #, name, game count, min/max year played. Sort descending by game count.
+      Acceptance criteria: HAVING COUNT(*) >= 5.
 
-  - title: "QUERY-5 (v): Member count by age, all locations"
+  - title: "QUERY-12: Formation report by location and date range"
     label: QUERY
     body: |
-      One row per age value, count of club members at that age across the whole club. Sort descending by age.
-      Acceptance criteria: GROUP BY computed age; verify totals sum to total club member count.
+      Per location: training session count + player count, game session count + player count. Only locations with ≥4 game sessions. Sort descending by game session count.
+      Acceptance criteria: Correct split between training vs game sessions.
 
-  - title: "QUERY-6 (vi): Major members who are also family members"
+  - title: "QUERY-13: Active members never in a formation but with ≥1 FIFA game"
     label: QUERY
     body: |
-      For each major club member who also appears as a FamilyMember, list every club member associated with them: their own name + associated member's number, name, DOB, SSN, Medicare#, phone, address, city, province, postal code, relationship type, status.
+      Membership #, name, age, phone, email, FIFA game count, current location. Sort ascending by location then FIFA game count.
+      Acceptance criteria: LEFT JOIN + IS NULL against TeamFormationAssignment; active status derived.
 
-      Acceptance criteria: Requires joining ClubMember → FamilyMember (matched, likely on SSN or a shared person link — clarify in ERD if FamilyMember and ClubMember of the same person are the same row or linked rows) → ClubMemberFamilyRelation → ClubMember (children). This is the trickiest query — flag the person-identity question in ERD-2 if not already resolved.
-
-  - title: "QUERY-7 (vii): Fees + donations, major members, 2023–2025"
+  - title: "QUERY-14: Major members who were minors when they joined"
     label: QUERY
     body: |
-      Description: Sum of membership fees paid and sum of donations (amount exceeding $200/year cap) for major members only, across payment years 2023–2025.
+      Membership #, name, status, join date, age, phone, email, current location. Sort ascending by location then age.
+      Acceptance criteria: Join date/age-at-join computed correctly from DOB.
 
-      Acceptance criteria: Two aggregates: SUM(LEAST(payment, 200)) for fees, SUM(GREATEST(payment - 200, 0)) for donations, grouped/filtered correctly by payment year and member type at time of payment.
-
-  - title: "QUERY-8 (viii): Members with ≥4 FIFA games (all members)"
+  - title: "QUERY-15: Active members who have only ever played Goalkeeper"
     label: QUERY
     body: |
-      <br>Description: Same as query ii but for all club members (not just major), threshold ≥4 games instead of ≥1. Sort ascending by location, then age.
+      Membership #, name, age, phone, email, current location, FIFA game count. Must have ≥1 Goalkeeper assignment, zero of any other role. Sort ascending by location then membership #.
+      Acceptance criteria: NOT EXISTS subquery for "any other role" case.
 
-      Acceptance criteria: GROUP BY + HAVING COUNT(*) >= 4 on FIFAParticipation.
+  - title: "QUERY-16: Active members assigned to all 5 given roles"
+    label: QUERY
+    body: |
+      Members assigned at least once each to Goalkeeper, Right fullback, Sweeper, Defending, Striker. Sort ascending by location then membership #.
+      Acceptance criteria: HAVING COUNT(DISTINCT role) covers all 5 required roles.
 
-  - title: "VERIFY-1: Run count checks"
+  - title: "QUERY-17: Family members who are also head coaches at their location"
+    label: QUERY
+    body: |
+      Given a location: family members with an active club member there who are also head coach of ≥1 formation at that location. Name + phone.
+      Acceptance criteria: Correct join between FamilyMember and TeamFormation.head_coach.
+
+  - title: "QUERY-18: Active members who never won a game"
+    label: QUERY
+    body: |
+      Membership #, name, age, phone, email, current location. Must have ≥1 game assignment, no game where their team's score was higher. Sort ascending by location then membership #.
+      Acceptance criteria: Correct score comparison per team per session.
+
+  - title: "QUERY-19: Volunteer personnel who are family members with FIFA-participating minors"
+    label: QUERY
+    body: |
+      Volunteer's name, minor member count, FIFA-participant count, phone, email, current location, role. Sort ascending by location, role, first name, last name.
+      Acceptance criteria: Join Personnel(volunteer) → FamilyMember (same person) → ClubMember → FIFAParticipation.
+
+  - title: "EMAIL-1: Weekly session email + log"
+    label: EMAIL
+    body: |
+      Generate emails for the coming week's sessions (subject format, body per spec). Write each to EmailLog (date, sender location, receiver, subject, first 100 chars of body).
+      Acceptance criteria: Subject/body match spec format exactly; log populated per email sent.
+
+  - title: "GUI-1: CRUD screens (OPS-1 to OPS-7)"
+    label: GUI
+    body: |
+      Build screens for Location, Personnel, FamilyMember, ClubMember, TeamFormation, Assignment, Payment.
+      Acceptance criteria: Each screen covers Create/Delete/Edit/Display where applicable; connects to AITS.
+
+  - title: "GUI-2: Reports screen (QUERY-8 to QUERY-19)"
+    label: GUI
+    body: |
+      Build a way to run and display each report query from the GUI.
+      Acceptance criteria: All 12 queries reachable and readable from the UI.
+
+  - title: "INTEGRITY-1: Demonstrate constraint enforcement"
+    label: INTEGRITY
+    body: |
+      Prepare a live demo script proving key constraints hold: formation conflict rejection, unique SSN/Medicare#, boys/girls team rule, min age 4.
+      Acceptance criteria: Each case has a "should fail" input ready to run on demo day.
+
+  - title: "VERIFY-1: AITS connection + count checks"
     label: VERIFY
     body: |
-      Description: Execute SELECT COUNT(*) FROM R; for every table, save output to 04_verify.sql results / a text file for the report.
-      Acceptance criteria: Output captured and matches expected ≥10 rows per table.
+      Confirm GUI/backend connects to AITS MySQL (not local) and run SELECT COUNT(*) for every table.
+      Acceptance criteria: Connection verified from a lab PC; counts captured for the report.
 
-  - title: "REPORT-1: Assemble final PDF"
+  - title: "REPORT-2: Assemble final PDF"
     label: REPORT
     body: |
-
-      Combine originality form (signed, cover page with Group Account # and all member names/IDs), ERD image, schema DDL with key/type rationale, all 8 query SQL + brief explanation each, and COUNT(*) results.
-
-      Acceptance criteria: Single PDF, uploaded to Moodle before July 24, 23:55.
+      Combine cover page (Group/Team ID, member names/IDs), signed originality form, CONTRIBUTIONS section, assumptions, ERD, E/R→relation conversion + FDs/keys, normalization/BCNF analysis, DDL, all 22 operations with ≥5 result rows each, trigger explanation, GUI screenshots.
+      Acceptance criteria: Single PDF, uploaded to Moodle before August 7, 23:55.
