@@ -4,15 +4,21 @@
   background: #f8fafc;
 }
 
-.app-body {
+.main-content {
   width: 100%;
   min-height: 100vh;
-  padding-top: 76px;
+  box-sizing: border-box;
+  padding: 190px 0 64px 0;
 }
 
-.main-content {
-  min-height: calc(100vh - 76px);
-  width: calc(100vw - 329px);
-  margin-left: 232px;
-  padding: 64px 48px;
+@media (max-width: 900px) {
+  .main-content {
+    padding-top: 176px;
+  }
+}
+
+@media (max-width: 640px) {
+  .main-content {
+    padding: 164px 18px 40px;
+  }
 }
