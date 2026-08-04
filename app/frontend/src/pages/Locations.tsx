@@ -1,33 +1,15 @@
-import { useEffect, useState } from "react";
-
-import DataGrid from "../components/common/data-grid/DataGrid";
-import type { Location } from "../components/types/location";
-import { locationFields } from "../relations";
+import RelationPage from "../components/common/relation-page/RelationshipPage";
+import { locationFields } from "../relations/location.fields";
+// import { locations } from "../data/locations.data";
+import type { Location } from "../types/location";
 
 export default function Locations() {
-  const [locations, setLocations] = useState<Location[]>([]);
-  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    async function loadLocations() {
-      try {
-        const response = await fetch("/api/locations");
-
-        if (!response.ok) {
-          throw new Error("Could not load locations");
-        }
-
-        const data: Location[] = await response.json();
-        setLocations(data);
-      } catch (error) {
-        console.error("Failed to load locations:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    // void loadLocations();
-    setLocations([
+  return (
+    <RelationPage<Location>
+      title="Locations"
+      description="Manage club locations."
+      initialData={[
   {
     location_id: 1,
     location_type: "Head",
@@ -61,29 +43,20 @@ export default function Locations() {
     web_address: "https://northsports.ca",
     capacity: 600,
   },
-])
-  }, []);
-
-  return (
-    <section className="page">
-      <div className="page-header">
-        <div>
-          <h1>Locations</h1>
-          <p>Manage club locations.</p>
-        </div>
-      </div>
-
-      <DataGrid<Location>
-        rowData={locations}
-        columnDefs={locationFields}
-        loading={loading}
-        getRowId={(location) =>
-          location.location_id.toString()
-        }
-        onRowClick={(location) => {
-          console.log("Selected location:", location);
-        }}
-      />
-    </section>
+]}
+      columnDefs={locationFields}
+      getRowId={(row) => String(row.location_id)}
+      createEmptyRow={() => ({
+        location_id: Date.now(),
+        location_type: "Branch",
+        name: "",
+        address: "",
+        city: "",
+        province: "",
+        postal_code: "",
+        web_address: "",
+        capacity: 0,
+      })}
+    />
   );
 }

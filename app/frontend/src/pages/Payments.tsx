@@ -1,0 +1,26 @@
+import RelationPage from "../components/common/relation-page/RelationPage";
+import { paymentFields } from "../relations/payment.fields";
+import type { Payment } from "../types/payment";
+
+export default function Payments() {
+  return (
+    <RelationPage<Payment>
+      title="Payments"
+      description="Manage membership payments and installments."
+      initialData={[]}
+      columnDefs={paymentFields}
+      getRowId={(row) => String(row.payment_id)}
+      createEmptyRow={() => ({
+        payment_id: Date.now(),
+        membership_number: "",
+        payment_date: new Date()
+          .toISOString()
+          .slice(0, 10),
+        amount: 0,
+        payment_method: "",
+        membership_year: new Date().getFullYear(),
+        installment_number: 1,
+      })}
+    />
+  );
+}

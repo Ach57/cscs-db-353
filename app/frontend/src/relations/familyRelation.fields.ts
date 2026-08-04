@@ -1,5 +1,5 @@
 import type { ColDef } from "ag-grid-community";
-import type { FamilyRelation } from "../components/types/member";
+import type { FamilyRelation } from "../types/member";
 
 export const familyRelationFields: ColDef<FamilyRelation>[] = [
   {
