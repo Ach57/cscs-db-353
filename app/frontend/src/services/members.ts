@@ -1,38 +1,34 @@
-import { api } from "./api";
-import type { ClubMember,ClubMemberInput,FamilyMember,FamilyMemberInput,FamilyRelation } from "../types/member";
-
-export const listClubMembers = () => api.get<ClubMember[]>("/api/club-members");
-
-export const getClubMember = (id:number) => api.get<ClubMember>(`/api/club-members/${id}`);
-
-export const createClubMember = (input:ClubMemberInput) => api.post<ClubMember>("/api/club-members",input);
-
-export const updateClubMember = (id:number,input:Partial<ClubMemberInput>) => api.put<ClubMember>(`/api/club-members/${id}`,input);
-
-export const deleteClubMember = (id:number) => api.delete(`/api/club-members/${id}`);
-
-export const listFamilyMembers = () => api.get<FamilyMember[]>("/api/family-members");
-
-export const getFamilyMember = (id:number) => api.get<FamilyMember>(`/api/family-members/${id}`);
-
-export const createFamilyMember = (input:FamilyMemberInput) => api.post<FamilyMember>("/api/family-members",input);
-
-export const updateFamilyMember = (id:number,input:Partial<FamilyMemberInput>) => api.put<FamilyMember>(`/api/family-members/${id}`,input);
-
-export const deleteFamilyMember = (id:number) => api.delete(`/api/family-members/${id}`);
-
-export const linkFamilyMember = (input:Omit<FamilyRelation,"relation_id">) => api.post<FamilyRelation>("/api/family-relations",input);
-
-export const endFamilyRelation = (id:number,end_date:string) => api.put<FamilyRelation>(`/api/family-relations/${id}/end`,{end_date});
-
-export const setMemberHobbies = (id:number,hobbyIds:number[]) => api.put<void>(`/api/club-members/${id}/hobbies`,{hobby_ids:hobbyIds});
-
 import { createCrudApi } from "./crudApi";
+import { createLocalStorageCrudApi } from "./localStorageCrudApi";
+import type { ClubMember, ClubMemberInput, FamilyMember, FamilyMemberInput } from "../types/member";
 
-export const clubMemberApi = createCrudApi<ClubMember, ClubMemberInput>(
-  "/api/club-members",
-);
+const familySeed: FamilyMember[] = [
+  {
+    family_member_id: 1,
+    first_name: "Marc",
+    last_name: "Roy",
+    date_of_birth: "1978-09-20",
+    ssn: "222-333-444",
+    medicare_number: "ROYM78092001",
+    phone_number: "514-555-4100",
+    address: "44 Family Street",
+    city: "Laval",
+    province: "QC",
+    postal_code: "H7N 1A1",
+    email: "marc.roy@example.ca",
+  },
+];
 
-export const familyMemberApi = createCrudApi<FamilyMember, FamilyMemberInput>(
-  "/api/family-members",
-);
+const familyMockApi = createLocalStorageCrudApi<FamilyMember, FamilyMemberInput, FamilyMemberInput>({
+  storageKey: "cscs.familyMembers",
+  idField: "family_member_id",
+  seed: familySeed,
+  fromCreate: (input, id) => ({ family_member_id: id, ...input }),
+});
+
+const familyRealApi = createCrudApi<FamilyMember, FamilyMemberInput, FamilyMemberInput>("/api/family-members");
+export const familyMemberApi = import.meta.env.VITE_USE_MOCK_API === "false"
+  ? familyRealApi
+  : familyMockApi;
+
+export const clubMemberApi = createCrudApi<ClubMember, ClubMemberInput>("/api/club-members");
