@@ -96,6 +96,7 @@ CREATE TABLE ClubMember (
     first_name VARCHAR(50) NOT NULL,
     last_name VARCHAR(50) NOT NULL,
     date_of_birth DATE NOT NULL,
+    gender VARCHAR(20) NOT NULL,
     registration_date DATE NOT NULL,
     height_cm DECIMAL(5,2),
     weight_kg DECIMAL(5,2),
@@ -178,4 +179,75 @@ CREATE TABLE FIFAParticipation (
         ON DELETE CASCADE,
     FOREIGN KEY (membership_number)
         REFERENCES ClubMember(membership_number)
+);
+
+CREATE TABLE Session (
+    session_id INT AUTO_INCREMENT PRIMARY KEY,
+    session_datetime DATETIME NOT NULL,
+    address VARCHAR(150) NOT NULL,
+    session_type ENUM('Training', 'Game') NOT NULL
+    -- one Session must have exactly 2 TeamFormation rows --
+    -- not enforceable here, checked via trigger/app logic
+);
+
+CREATE TABLE TeamFormation (
+    formation_id INT AUTO_INCREMENT PRIMARY KEY,
+    session_id INT NOT NULL,
+    location_id INT NOT NULL,
+    head_coach_id INT NOT NULL,
+    team_name VARCHAR(100) NOT NULL,
+    score INT,
+    FOREIGN KEY (session_id)
+        REFERENCES Session(session_id)
+        ON DELETE CASCADE,
+    FOREIGN KEY (location_id) REFERENCES Location(location_id),
+    FOREIGN KEY (head_coach_id) REFERENCES Personnel(personnel_id),
+    CHECK (score IS NULL OR score >= 0)
+    -- score NULL = session in the future
+    -- all assigned members must share gender and be at this location_id --
+    -- not enforceable here, checked via trigger/app logic
+);
+
+CREATE TABLE TeamFormationAssignment (
+    formation_id INT NOT NULL,
+    membership_number INT NOT NULL,
+    role ENUM(
+        'Goalkeeper',
+        'Right Fullback',
+        'Left Fullback',
+        'Center Back',
+        'Center Back or Sweeper',
+        'Defending or Holding Midfielder',
+        'Right Midfielder or Winger',
+        'Central Midfielder',
+        'Striker',
+        'Attacking Midfielder',
+        'Left Winger'
+    ) NOT NULL,
+    PRIMARY KEY (formation_id, membership_number),
+    FOREIGN KEY (formation_id)
+        REFERENCES TeamFormation(formation_id)
+        ON DELETE CASCADE,
+    FOREIGN KEY (membership_number)
+        REFERENCES ClubMember(membership_number)
+    -- conflict rule (same member, same day, <3hr gap between two
+    -- formations' session start times => reject) enforced via
+    -- trigger, not here -- see TRIGGER-1
+);
+
+CREATE TABLE EmailLog (
+    email_id INT AUTO_INCREMENT PRIMARY KEY,
+    email_date DATE NOT NULL,
+    membership_number INT NOT NULL,
+    formation_id INT NOT NULL,
+    subject VARCHAR(150) NOT NULL,
+    body_snippet VARCHAR(100) NOT NULL,
+    FOREIGN KEY (membership_number)
+        REFERENCES ClubMember(membership_number),
+    FOREIGN KEY (formation_id)
+        REFERENCES TeamFormation(formation_id)
+    -- sender location is derived via formation_id -> TeamFormation.location_id
+    -- -> Location.name at query time, not stored here
+    -- subject/body_snippet are stored as sent (audit trail), not
+    -- re-derived if the formation is edited later
 );

@@ -1,4 +1,4 @@
-# Comp 353 - WarmUp Project
+# Comp 353 - Main Project
 
 ## Authors:
 
@@ -78,6 +78,7 @@ CLUB_MEMBER (
     [String] FirstName,
     [String] LastName,
     [Date] DateOfBirth,
+    [String] Gender (Boy, Girl),
     [Decimal] Height,
     [Decimal] Weight,
     [Int] SSN,
@@ -90,6 +91,8 @@ CLUB_MEMBER (
     [Int] LID FK -> LOCATION(LID)
     -- implements CURRENTLY_AT (N:1, current location only)
     -- Type (Major/Minor) is DERIVED from DateOfBirth, not stored
+    -- Gender is new: required to enforce "all players in a formation must be
+    -- all-boys or all-girls" -- wasn't needed until team formations existed
 )
 
 CLUB_MEMBER_FAMILY (
@@ -134,5 +137,56 @@ FIFA_PARTICIPATION (
     [Int] GameID FK -> FIFA_GAME(GameID),
     [Int] CMN FK -> CLUB_MEMBER(CMN),
     PK (GameID, CMN)
+)
+
+SESSION (
+    [Int] SessionID PK AUTO_INCREMENT,
+    [DateTime] SessionDateTime,
+    [String] Address,
+    [String] Type (Training, Game)
+    -- one Session has exactly 2 TEAM_FORMATION rows
+    -- NOT enforceable via FK/PK alone -- check via trigger or app logic
+)
+
+TEAM_FORMATION (
+    [Int] FormationID PK AUTO_INCREMENT,
+    [String] TeamName,
+    [String] Score (NULL = session in the future),
+    [Int] LID FK -> LOCATION(LID),
+    -- implements BELONGS_TO: every team tied to one location
+    [Int] SessionID FK -> SESSION(SessionID),
+    -- implements IN_SESSION: two formations per session, same or different LID
+    [Int] CoachMedCard FK -> PERSONNEL(MedCard)
+    -- implements COACHED_BY: Employee only (per mainProject-details.md --
+    -- description never names FamilyMember as an eligible coach)
+    -- Business rule, not enforced by FK: all players assigned to this
+    -- formation must share Gender, and must be CLUB_MEMBER.LID = this.LID
+)
+
+TEAM_FORMATION_ASSIGNMENT (
+    [Int] FormationID FK -> TEAM_FORMATION(FormationID),
+    [Int] CMN FK -> CLUB_MEMBER(CMN),
+    [String] Role (Goalkeeper, RightFullback, LeftFullback, CenterBack,
+                    CenterBackSweeper, DefendingMidfielder, RightMidfielder,
+                    CentralMidfielder, Striker, AttackingMidfielder, LeftWinger),
+    PK (FormationID, CMN)
+    -- Business rule, not enforced by FK: a CMN cannot be assigned to two
+    -- formations on the same day unless their SessionDateTime start times
+    -- are >= 3 hours apart -- enforced via trigger (see TRIGGER-1)
+)
+
+EMAIL_LOG (
+    [Int] EmailID PK AUTO_INCREMENT,
+    [Date] EmailDate,
+    [String] Subject,
+    [String] BodySnippet (max 100 chars),
+    [Int] CMN FK -> CLUB_MEMBER(CMN),
+    -- implements SENT_TO: the receiving club member
+    [Int] FormationID FK -> TEAM_FORMATION(FormationID)
+    -- implements ABOUT: the formation/session this email describes
+    -- SenderLocation is NOT a stored column -- derive via
+    -- FormationID -> TEAM_FORMATION.LID -> LOCATION.Name at query time
+    -- Subject/BodySnippet ARE stored (not derived) -- log must freeze what
+    -- was actually sent, independent of later edits to formation/coach data
 )
 ```
