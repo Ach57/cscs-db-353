@@ -5,6 +5,8 @@ import {
   themeQuartz,
   type AutoSizeStrategy,
   type ColDef,
+  type GridReadyEvent,
+  type SelectionChangedEvent,
 } from "ag-grid-community";
 
 import type { DataGridProps } from "./gridTypes";
@@ -31,8 +33,12 @@ export default function DataGrid<T extends object>({
   loading = false,
   pagination = false,
   pageSize = 20,
+  editable = false,
+  quickFilterText = "",
   getRowId,
+  onGridReady,
   onRowClick,
+  onSelectionChanged,
   onCellValueChanged,
 }: DataGridProps<T>) {
   const defaultColDef = useMemo<ColDef<T>>(
@@ -40,23 +46,16 @@ export default function DataGrid<T extends object>({
       sortable: true,
       filter: true,
       resizable: true,
-
-      // Do not use flex here because it can shrink columns.
-      minWidth: 120,
-
-      // Show the full column heading.
-      wrapHeaderText: false,
+      editable,
+      minWidth: 130,
       autoHeaderHeight: true,
     }),
-    [],
+    [editable],
   );
 
   const autoSizeStrategy = useMemo<AutoSizeStrategy>(
     () => ({
       type: "fitCellContents",
-
-      // Extra horizontal space around the longest value.
-      colResizeDefault: "shift",
     }),
     [],
   );
@@ -69,32 +68,43 @@ export default function DataGrid<T extends object>({
         columnDefs={columnDefs}
         defaultColDef={defaultColDef}
         autoSizeStrategy={autoSizeStrategy}
-
-        // Grid height follows the displayed rows.
         domLayout="autoHeight"
-
         loading={loading}
+        quickFilterText={quickFilterText}
         pagination={pagination}
         paginationPageSize={pageSize}
         paginationPageSizeSelector={[10, 20, 50, 100]}
-
+        rowSelection={{
+          mode: "multiRow",
+          checkboxes: true,
+          headerCheckbox: true,
+        }}
         getRowId={
           getRowId
             ? (params) => getRowId(params.data)
             : undefined
         }
-
+        onGridReady={(event: GridReadyEvent<T>) => {
+          onGridReady?.(event.api);
+        }}
         onRowClicked={(event) => {
           if (event.data) {
             onRowClick?.(event.data);
           }
         }}
-
+        onSelectionChanged={(
+          event: SelectionChangedEvent<T>,
+        ) => {
+          onSelectionChanged?.(
+            event.api.getSelectedRows(),
+          );
+        }}
         onCellValueChanged={(event) => {
           if (event.data) {
             onCellValueChanged?.(
               event.data,
               event.colDef.field as string | undefined,
+              event,
             );
           }
         }}

@@ -1,5 +1,5 @@
 import type { ColDef } from "ag-grid-community";
-import type { Payment } from "../components/types/payment";
+import type { Payment } from "../types/payment";
 
 export const paymentFields: ColDef<Payment>[] = [
   {

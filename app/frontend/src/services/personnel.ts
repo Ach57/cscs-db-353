@@ -1,4 +1,5 @@
 import { api } from "./api";
+import { createCrudApi } from "./crudApi";
 import type { Personnel,PersonnelInput,PersonnelAssignment } from "../types/personnel";
 
 export const listPersonnel = () => api.get<Personnel[]>("/api/personnel");
@@ -16,3 +17,12 @@ export const assignPersonnel = (input:Omit<PersonnelAssignment,"assignment_id">)
 export const endPersonnelAssignment = (id:number,end_date:string) => api.put<PersonnelAssignment>(`/api/personnel/assignments/${id}/end`,{end_date});
 
 export const listPersonnelAssignments = (id:number) => api.get<PersonnelAssignment[]>(`/api/personnel/${id}/assignments`);
+
+
+export type CreatePersonnelInput =
+  Omit<Personnel, "personnel_id">;
+
+export const personnelApi =
+  createCrudApi<Personnel, CreatePersonnelInput>(
+    "/api/personnel",
+  );

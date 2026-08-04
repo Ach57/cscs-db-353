@@ -1,7 +1,10 @@
 import type {
   CellValueChangedEvent,
   ColDef,
+  GridApi,
+  GridReadyEvent,
   RowClickedEvent,
+  SelectionChangedEvent,
 } from "ag-grid-community";
 
 export interface DataGridProps<T extends object> {
@@ -9,18 +12,19 @@ export interface DataGridProps<T extends object> {
   columnDefs: ColDef<T>[];
 
   loading?: boolean;
-  height?: string | number;
   pagination?: boolean;
   pageSize?: number;
+  editable?: boolean;
+  quickFilterText?: string;
 
   getRowId?: (row: T) => string;
+
+  onGridReady?: (api: GridApi<T>) => void;
   onRowClick?: (row: T) => void;
-  onCellValueChanged?: (row: T, field?: string) => void;
+  onSelectionChanged?: (rows: T[]) => void;
+  onCellValueChanged?: (
+    row: T,
+    field?: string,
+    event?: CellValueChangedEvent<T>,
+  ) => void;
 }
-
-export type GridColumn<T extends object> = ColDef<T>;
-
-export type GridRowClickEvent<T extends object> = RowClickedEvent<T>;
-
-export type GridCellChangeEvent<T extends object> =
-  CellValueChangedEvent<T>;
