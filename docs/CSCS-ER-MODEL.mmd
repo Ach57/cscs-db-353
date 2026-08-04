@@ -1,0 +1,89 @@
+flowchart TD
+
+%% ===== LOCATION & PERSONNEL =====
+subgraph LOC_PERSONNEL["Location & Personnel"]
+LOCATION["<b>LOCATION</b><br/><u>LID</u><br/>Type, Name, Address, City,<br/>Province, PostalCode,<br/>WebAddress, MaxCapacity"]
+LOCPHONE(["PhoneNumber<br/>(multivalued)"])
+EMPLOYEE["<b>EMPLOYEE</b><br/><u>MedCard</u><br/>SSN (unique, not null),<br/>FirstName, LastName, DOB,<br/>Phone, Address, City, Province,<br/>PostalCode, Email, Role, Mandate"]
+WORKS_AT{"WORKS_AT<br/>StartDate, EndDate"}
+MANAGES{"MANAGES"}
+end
+
+%% ===== FAMILY & CLUB MEMBERS =====
+subgraph FAMILY_CLUB["Family & Club Members"]
+MEMBER["<b>FAMILY MEMBER</b><br/><u>MedCard</u><br/>SSN (unique, not null),<br/>FirstName, LastName, DOB,<br/>Phone, Address, City, Province,<br/>PostalCode, Email"]
+CLUBMEMBER["<b>CLUBMEMBER</b><br/><u>CMN</u> (global auto-increment)<br/>FirstName, LastName, DOB,<br/>Height, Weight, SSN, MedCard,<br/>Phone, Address, City, Province, PostalCode<br/><i>Type(Major/Minor) - derived, not stored</i>"]
+ASSOC_LOC{"ASSOC_WITH<br/>StartDate, EndDate"}
+GUARDIAN{"GUARDIAN_OF<br/>Relation, StartDate, EndDate"}
+AT_LOC{"CURRENTLY_AT"}
+end
+
+%% ===== HOBBIES & FINANCE =====
+subgraph HOBBY_FIN["Hobbies & Finance"]
+HOBBY["<b>HOBBY</b><br/><u>HobbyName</u>"]
+PAYMENT["<b>PAYMENT</b><br/><u>PaymentID</u><br/>PaymentDate, Amount,<br/>Method(Cash/Debit/Credit),<br/>MembershipYear<br/><i>max 4 installments/year</i>"]
+HAS_HOBBY{"HAS_HOBBY"}
+MAKES{"MAKES"}
+end
+
+%% ===== FIFA =====
+subgraph FIFA["FIFA Participation"]
+FIFAGAME["<b>FIFAGAME</b><br/><u>GameID</u><br/>Team, Opponent, DateOfGame, FinalScore"]
+PARTICIPATES{"PARTICIPATES_IN"}
+HELD_AT{"HELD_AT"}
+end
+
+%% ===== SESSIONS & FORMATIONS =====
+subgraph SESSIONS["Sessions & Team Formations"]
+SESSION["<b>SESSION</b><br/><u>SessionID</u><br/>DateTime, Address, Type(Training/Game)"]
+TEAMFORMATION["<b>TEAM FORMATION</b><br/><u>FormationID</u><br/>TeamName, Score"]
+FORM_LOC{"BELONGS_TO"}
+FORM_SESSION{"IN_SESSION"}
+FORM_COACH{"COACHED_BY"}
+ASSIGNED{"ASSIGNED_TO<br/>Role"}
+end
+
+%% ===== EMAIL =====
+subgraph EMAIL["Email Notifications"]
+EMAILLOG["<b>EMAIL LOG</b><br/><u>EmailID</u><br/>Date, Subject, BodySnippet(100 chars)"]
+LOG_RECEIVER{"SENT_TO"}
+LOG_FORMATION{"ABOUT"}
+end
+
+%% ===== EDGES =====
+LOCATION --- LOCPHONE
+EMPLOYEE --- WORKS_AT
+WORKS_AT --- LOCATION
+LOCATION --> MANAGES
+MANAGES --> EMPLOYEE
+
+MEMBER --- ASSOC_LOC
+ASSOC_LOC --- LOCATION
+MEMBER --- GUARDIAN
+GUARDIAN --- CLUBMEMBER
+CLUBMEMBER --- AT_LOC
+AT_LOC --> LOCATION
+
+CLUBMEMBER --- HAS_HOBBY
+HAS_HOBBY --- HOBBY
+PAYMENT --- MAKES
+MAKES --> CLUBMEMBER
+
+CLUBMEMBER --- PARTICIPATES
+PARTICIPATES --- FIFAGAME
+FIFAGAME --- HELD_AT
+HELD_AT --> LOCATION
+
+TEAMFORMATION --- FORM_LOC
+FORM_LOC --> LOCATION
+TEAMFORMATION --- FORM_SESSION
+FORM_SESSION --> SESSION
+TEAMFORMATION --- FORM_COACH
+FORM_COACH --> EMPLOYEE
+CLUBMEMBER --- ASSIGNED
+ASSIGNED --- TEAMFORMATION
+
+EMAILLOG --- LOG_RECEIVER
+LOG_RECEIVER --> CLUBMEMBER
+EMAILLOG --- LOG_FORMATION
+LOG_FORMATION --> TEAMFORMATION
