@@ -114,17 +114,17 @@ INSERT INTO FamilyMemberAssignment (assignment_id, family_member_id, location_id
 -- =========================================
 -- Table: ClubMember
 -- =========================================
-INSERT INTO ClubMember (membership_number, location_id, first_name, last_name, date_of_birth, registration_date, height_cm, weight_kg, ssn, medicare_number, phone_number, address, city, province, postal_code) VALUES
-(1, 1, 'Thomas',  'Lavoie',   '2010-02-14', '2022-08-01', 155.00, 45.50, 'M100000001', 'LAVO10021499', '514-555-3001', '15 Rue Sherbrooke', 'Montreal',  'QC', 'H2F6F6'),
-(2, 1, 'Sophie',  'Bélanger', '2008-06-30', '2021-09-05', 162.00, 52.00, 'M100000002', 'BELA08063099', '514-555-3002', '20 Rue Ontario',    'Montreal',  'QC', 'H2K1K1'),
-(3, 2, 'Maxime',  'Girard',   '2011-11-02', '2023-01-15', 148.00, 40.00, 'M100000003', 'GIRA11110299', '450-555-3003', '27 Rue Lévis',      'Laval',     'QC', 'H7G7G7'),
-(4, 2, 'Camille', 'Dubois',   '2005-03-19', '2020-02-20', 170.00, 60.00, 'M100000004', 'DUBO05031999', '450-555-3004', '10 Rue des Pins',   'Laval',     'QC', 'H7L2L2'),
-(5, 3, 'Antoine', 'Bergeron', '2012-09-08', '2023-06-10', 140.00, 36.00, 'M100000005', 'BERG12090899', '450-555-3005', '39 Rue Fournier',   'Longueuil', 'QC', 'J4H8H8'),
-(6, 3, 'Laurie',  'Pelletier','2007-12-25', '2021-11-01', 158.00, 48.00, 'M100000006', 'PELL07122599', '450-555-3006', '5 Rue Curé-Poirier','Longueuil', 'QC', 'J4J3J3'),
-(7, 1, 'Gabriel',   'Morin',    '2006-04-17', '2020-09-01', 168.00, 58.00, 'M100000007', 'MORI06041799', '514-555-3007', '41 Rue Rachel',        'Montreal',  'QC', 'H2I9I9'),
-(8, 2, 'Emma',      'Roy',      '2013-01-05', '2024-01-20', 135.00, 32.00, 'M100000008', 'ROYE13010599', '450-555-3008', '56 Rue des Érables',   'Laval',     'QC', 'H7C3C3'),
-(9, 1, 'Alexandre', 'Gagnon',   '1998-08-14', '2023-05-10', 181.00, 76.00, 'M100000009', 'GAGN98081499', '514-555-3009', '72 Rue Saint-Laurent',  'Montreal',  'QC', 'H2Y2Y2'),
-(10,3, 'Isabelle',  'Caron',    '2001-10-22', '2024-02-15', 168.00, 59.00, 'M100000010', 'CARO01102299', '450-555-3010', '88 Rue Victoria',       'Longueuil', 'QC', 'J4K4K4');
+INSERT INTO ClubMember (membership_number, location_id, first_name, last_name, date_of_birth, gender ,registration_date, height_cm, weight_kg, ssn, medicare_number, phone_number, address, city, province, postal_code) VALUES
+(1, 1, 'Thomas',  'Lavoie',   '2010-02-14', 'male' ,'2022-08-01', 155.00, 45.50, 'M100000001', 'LAVO10021499', '514-555-3001', '15 Rue Sherbrooke', 'Montreal',  'QC', 'H2F6F6'),
+(2, 1, 'Sophie',  'Bélanger', '2008-06-30', 'female' ,'2021-09-05', 162.00, 52.00, 'M100000002', 'BELA08063099', '514-555-3002', '20 Rue Ontario',    'Montreal',  'QC', 'H2K1K1'),
+(3, 2, 'Maxime',  'Girard',   '2011-11-02', 'male' ,'2023-01-15', 148.00, 40.00, 'M100000003', 'GIRA11110299', '450-555-3003', '27 Rue Lévis',      'Laval',     'QC', 'H7G7G7'),
+(4, 2, 'Camille', 'Dubois',   '2005-03-19', 'female' ,'2020-02-20', 170.00, 60.00, 'M100000004', 'DUBO05031999', '450-555-3004', '10 Rue des Pins',   'Laval',     'QC', 'H7L2L2'),
+(5, 3, 'Antoine', 'Bergeron', '2012-09-08', 'male' ,'2023-06-10', 140.00, 36.00, 'M100000005', 'BERG12090899', '450-555-3005', '39 Rue Fournier',   'Longueuil', 'QC', 'J4H8H8'),
+(6, 3, 'Laurie',  'Pelletier','2007-12-25', 'female' ,'2021-11-01', 158.00, 48.00, 'M100000006', 'PELL07122599', '450-555-3006', '5 Rue Curé-Poirier','Longueuil', 'QC', 'J4J3J3'),
+(7, 1, 'Gabriel',   'Morin',    '2006-04-17', 'male' ,'2020-09-01', 168.00, 58.00, 'M100000007', 'MORI06041799', '514-555-3007', '41 Rue Rachel',        'Montreal',  'QC', 'H2I9I9'),
+(8, 2, 'Emma',      'Roy',      '2013-01-05', 'female' ,'2024-01-20', 135.00, 32.00, 'M100000008', 'ROYE13010599', '450-555-3008', '56 Rue des Érables',   'Laval',     'QC', 'H7C3C3'),
+(9, 1, 'Alexandre', 'Gagnon',   '1998-08-14', 'male' ,'2023-05-10', 181.00, 76.00, 'M100000009', 'GAGN98081499', '514-555-3009', '72 Rue Saint-Laurent',  'Montreal',  'QC', 'H2Y2Y2'),
+(10,3, 'Isabelle',  'Caron',    '2001-10-22', 'female' ,'2024-02-15', 168.00, 59.00, 'M100000010', 'CARO01102299', '450-555-3010', '88 Rue Victoria',       'Longueuil', 'QC', 'J4K4K4');
 
 -- =========================================
 -- Table: ClubMemberFamilyRelation
@@ -255,7 +255,6 @@ INSERT INTO ClubMemberHobby (membership_number, hobby_id) VALUES
 (6, 4),
 (6, 5);
 
-
 -- =========================================
 -- Query 4 test data:
 -- =========================================
@@ -282,3 +281,110 @@ INSERT INTO Payment (
 
 -- Isabelle: major member, paid only $100 => Inactive
 (18, 10, '2025-04-15', 100.00, 'Cash', 2025, 1);
+
+-- ====================================
+-- Session 
+-- ====================================
+INSERT INTO Session (session_datetime, address, session_type) VALUES
+('2026-08-05 18:00:00', '123 Main Street', 'Training'),
+('2026-08-06 19:00:00', '456 Park Avenue', 'Training'),
+('2026-08-08 15:00:00', '789 Sports Road', 'Game'),
+('2026-08-10 18:30:00', '123 Main Street', 'Training'),
+('2026-08-12 19:00:00', '456 Park Avenue', 'Training'),
+('2026-08-15 14:00:00', '789 Sports Road', 'Game'),
+('2026-08-17 18:00:00', '123 Main Street', 'Training'),
+('2026-08-20 19:30:00', '456 Park Avenue', 'Training'),
+('2026-08-22 16:00:00', '789 Sports Road', 'Game'),
+('2026-08-24 18:00:00', '123 Main Street', 'Training');
+
+INSERT INTO TeamFormation
+(session_id, location_id, head_coach_id, team_name, score)
+VALUES
+(1, 1, 3, 'Red Lions', NULL),
+(1, 1, 9, 'Blue Hawks', NULL),
+(2, 2, 3, 'Green Wolves', NULL),
+(2, 2, 9, 'Golden Eagles', NULL),
+(3, 3, 3, 'Red Lions', 2),
+(3, 3, 9, 'Blue Hawks', 1),
+(4, 1, 3, 'Red Lions', NULL),
+(4, 1, 9, 'Golden Eagles', NULL),
+(5, 2, 3, 'Green Wolves', NULL),
+(5, 2, 9, 'Blue Hawks', NULL),
+(6, 3, 3, 'Red Lions', 3),
+(6, 3, 9, 'Golden Eagles', 2),
+(7, 1, 3, 'Blue Hawks', NULL),
+(7, 1, 9, 'Green Wolves', NULL),
+(8, 2, 3, 'Golden Eagles', NULL),
+(8, 2, 9, 'Green Wolves', NULL),
+(9, 3, 3, 'Red Lions', 1),
+(9, 3, 9, 'Blue Hawks', 4),
+(10, 1, 3, 'Green Wolves', NULL),
+(10, 1, 9, 'Red Lions', NULL);
+
+INSERT INTO TeamFormationAssignment
+(formation_id, membership_number, role)
+VALUES
+(1, 1, 'Goalkeeper'),
+(1, 7, 'Center Back'),
+(2, 9, 'Goalkeeper'),
+(2, 1, 'Striker'),
+(3, 4, 'Goalkeeper'),
+(3, 8, 'Central Midfielder'),
+(4, 4, 'Goalkeeper'),
+(4, 8, 'Striker'),
+(5, 5, 'Goalkeeper'),
+(5, 10, 'Center Back'),
+(6, 5, 'Goalkeeper'),
+(6, 10, 'Striker'),
+(7, 2, 'Goalkeeper'),
+(7, 9, 'Left Winger'),
+(8, 2, 'Goalkeeper'),
+(8, 9, 'Central Midfielder'),
+(9, 3, 'Goalkeeper'),
+(9, 8, 'Striker'),
+(10, 3, 'Goalkeeper'),
+(10, 8, 'Central Midfielder'),
+(11, 5, 'Goalkeeper'),
+(11, 10, 'Center Back'),
+(12, 6, 'Goalkeeper'),
+(12, 5, 'Striker'),
+(13, 1, 'Goalkeeper'),
+(13, 7, 'Center Back'),
+(14, 9, 'Goalkeeper'),
+(14, 1, 'Striker'),
+(15, 4, 'Goalkeeper'),
+(15, 8, 'Striker'),
+(16, 4, 'Goalkeeper'),
+(16, 8, 'Central Midfielder'),
+(17, 5, 'Goalkeeper'),
+(17, 10, 'Striker'),
+(18, 6, 'Goalkeeper'),
+(18, 5, 'Center Back'),
+(19, 9, 'Goalkeeper'),
+(19, 7, 'Central Midfielder'),
+(20, 1, 'Goalkeeper'),
+(20, 9, 'Striker');
+
+INSERT INTO EmailLog
+(email_date, membership_number, formation_id, subject, body_snippet)
+VALUES
+('2026-08-01', 1, 1, 'Upcoming Training Session',
+ 'Reminder: training session on August 5 at 6 PM.'),
+('2026-08-01', 7, 2, 'Upcoming Training Session',
+ 'Reminder: training session on August 5 at 6 PM.'),
+('2026-08-02', 4, 3, 'Upcoming Training Session',
+ 'Reminder: training session on August 6 at 7 PM.'),
+('2026-08-02', 8, 4, 'Upcoming Training Session',
+ 'Reminder: training session on August 6 at 7 PM.'),
+('2026-08-03', 5, 5, 'Game Reminder',
+ 'Your game is scheduled for August 8 at 3 PM.'),
+('2026-08-03', 10, 6, 'Game Reminder',
+ 'Your game is scheduled for August 8 at 3 PM.'),
+('2026-08-05', 2, 7, 'Upcoming Training',
+ 'Training session scheduled for August 10 at 6:30 PM.'),
+('2026-08-06', 3, 9, 'Upcoming Training',
+ 'Training session scheduled for August 12 at 7 PM.'),
+('2026-08-08', 6, 11, 'Game Reminder',
+ 'Your team plays on August 15 at 2 PM.'),
+('2026-08-09', 9, 19, 'Upcoming Training',
+ 'Training session scheduled for August 24 at 6 PM.');
