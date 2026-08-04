@@ -1,5 +1,5 @@
 import type { ColDef } from "ag-grid-community";
-import type { TeamFormation } from "../types/formation";
+import type { TeamFormation } from "../../../../types/formation";
 
 export const teamFormationFields: ColDef<TeamFormation>[] = [
   {

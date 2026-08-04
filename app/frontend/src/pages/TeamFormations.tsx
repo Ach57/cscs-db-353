@@ -1,6 +1,7 @@
 import RelationPage from "../components/common/relation-page/RelationPage";
-import { teamFormationFields } from "../relations/teamFormation.fields";
+import { teamFormationFields } from "../components/common/data-grid/relations/teamFormation.fields";
 import type { TeamFormation } from "../types/formation";
+import { formationApi } from "../services/formations";
 
 export default function TeamFormations() {
   return (
@@ -9,6 +10,8 @@ export default function TeamFormations() {
       description="Manage games, practices and team formations."
       initialData={[]}
       columnDefs={teamFormationFields}
+      api={formationApi}
+      idField="formation_id"
       getRowId={(row) => String(row.formation_id)}
       createEmptyRow={() => ({
         formation_id: Date.now(),
@@ -16,12 +19,12 @@ export default function TeamFormations() {
         team_name: "",
         opponent_team_name: "",
         head_coach_id: 0,
-        session_nature: "Practice",
+        session_nature: "Training",
         session_start: "",
         address: "",
-        score: 0,
-        opponent_score: 0,
-        gender: "",
+        score: null,
+        opponent_score: null,
+        gender: "Boys",
       })}
     />
   );

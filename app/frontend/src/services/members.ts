@@ -26,3 +26,13 @@ export const linkFamilyMember = (input:Omit<FamilyRelation,"relation_id">) => ap
 export const endFamilyRelation = (id:number,end_date:string) => api.put<FamilyRelation>(`/api/family-relations/${id}/end`,{end_date});
 
 export const setMemberHobbies = (id:number,hobbyIds:number[]) => api.put<void>(`/api/club-members/${id}/hobbies`,{hobby_ids:hobbyIds});
+
+import { createCrudApi } from "./crudApi";
+
+export const clubMemberApi = createCrudApi<ClubMember, ClubMemberInput>(
+  "/api/club-members",
+);
+
+export const familyMemberApi = createCrudApi<FamilyMember, FamilyMemberInput>(
+  "/api/family-members",
+);

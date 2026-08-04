@@ -20,3 +20,9 @@ export const updatePlayerAssignment = (id:number,player_role:PlayerRole) =>
 export const removePlayerAssignment = (id:number) => api.delete(`/api/formations/players/${id}`);
 
 export const listFormationPlayers = (id:number) => api.get<FormationPlayer[]>(`/api/formations/${id}/players`);
+
+import { createCrudApi } from "./crudApi";
+
+export const formationApi = createCrudApi<TeamFormation, TeamFormationInput>(
+  "/api/formations",
+);

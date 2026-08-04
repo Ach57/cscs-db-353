@@ -1,6 +1,7 @@
 import RelationPage from "../components/common/relation-page/RelationPage";
-import { familyMemberFields } from "../relations/familyMember.fields";
+import { familyMemberFields } from "../components/common/data-grid/relations/familyMember.fields";
 import type { FamilyMember } from "../types/member";
+import { familyMemberApi } from "../services/members";
 
 export default function FamilyMembers() {
   return (
@@ -9,6 +10,8 @@ export default function FamilyMembers() {
       description="Manage family and emergency contacts."
       initialData={[]}
       columnDefs={familyMemberFields}
+      api={familyMemberApi}
+      idField="family_member_id"
       getRowId={(row) =>
         String(row.family_member_id)
       }
@@ -17,12 +20,14 @@ export default function FamilyMembers() {
         first_name: "",
         last_name: "",
         date_of_birth: "",
-        phone_number: "",
-        email: "",
-        address: "",
-        city: "",
-        province: "",
-        postal_code: "",
+        ssn: "",
+        medicare_number: null,
+        phone_number: null,
+        email: null,
+        address: null,
+        city: null,
+        province: null,
+        postal_code: null,
       })}
     />
   );

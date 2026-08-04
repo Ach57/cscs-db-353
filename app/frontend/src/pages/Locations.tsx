@@ -1,7 +1,8 @@
-import RelationPage from "../components/common/relation-page/RelationshipPage";
-import { locationFields } from "../relations/location.fields";
+import RelationPage from "../components/common/relation-page/RelationPage";
+import { locationFields } from "../components/common/data-grid/relations/location.fields";
 // import { locations } from "../data/locations.data";
 import type { Location } from "../types/location";
+import { locationApi } from "../services/locations";
 
 export default function Locations() {
 
@@ -45,6 +46,8 @@ export default function Locations() {
   },
 ]}
       columnDefs={locationFields}
+      api={locationApi}
+      idField="location_id"
       getRowId={(row) => String(row.location_id)}
       createEmptyRow={() => ({
         location_id: Date.now(),

@@ -1,24 +1,38 @@
-export interface CrudApi<T, CreateInput = Omit<T, never>> {
-  getAll(): Promise<T>;
+export interface CrudApi<T, CreateInput = Partial<T>> {
+  getAll(): Promise<T[]>;
   create(data: CreateInput): Promise<T>;
   update(id: string, data: Partial<T>): Promise<T>;
   remove(id: string): Promise<void>;
 }
 
-interface RequestOptions extends RequestInit {
-  body?: string;
+const API_URL = (
+  import.meta.env.VITE_API_URL ?? "http://localhost:5000"
+).replace(/\/+$/, "");
+
+interface RequestOptions extends Omit<RequestInit, "body"> {
+  body?: unknown;
 }
 
 async function request<T>(
-  url: string,
-  options?: RequestOptions,
+  endpoint: string,
+  options: RequestOptions = {},
 ): Promise<T> {
+  const normalizedEndpoint = endpoint.startsWith("/")
+    ? endpoint
+    : `/${endpoint}`;
+
+  const url = `${API_URL}${normalizedEndpoint}`;
+
   const response = await fetch(url, {
     ...options,
     headers: {
       "Content-Type": "application/json",
-      ...options?.headers,
+      ...options.headers,
     },
+    body:
+      options.body === undefined
+        ? undefined
+        : JSON.stringify(options.body),
   });
 
   if (!response.ok) {
@@ -27,11 +41,12 @@ async function request<T>(
     try {
       const errorBody = await response.json();
 
-      if (typeof errorBody.message === "string") {
-        message = errorBody.message;
-      }
+      message =
+        errorBody?.message ??
+        errorBody?.detail ??
+        message;
     } catch {
-      // The server did not return JSON.
+      // Response was not JSON.
     }
 
     throw new Error(message);
@@ -46,30 +61,30 @@ async function request<T>(
 
 export function createCrudApi<T, CreateInput = Partial<T>>(
   endpoint: string,
-) {
+): CrudApi<T, CreateInput> {
   return {
-    getAll(): Promise<T[]> {
+    getAll() {
       return request<T[]>(endpoint);
     },
 
-    create(data: CreateInput): Promise<T> {
+    create(data) {
       return request<T>(endpoint, {
         method: "POST",
-        body: JSON.stringify(data),
+        body: data,
       });
     },
 
-    update(id: string, data: Partial<T>): Promise<T> {
+    update(id, data) {
       return request<T>(
         `${endpoint}/${encodeURIComponent(id)}`,
         {
           method: "PUT",
-          body: JSON.stringify(data),
+          body: data,
         },
       );
     },
 
-    remove(id: string): Promise<void> {
+    remove(id) {
       return request<void>(
         `${endpoint}/${encodeURIComponent(id)}`,
         {

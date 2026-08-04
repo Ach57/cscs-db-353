@@ -1,6 +1,8 @@
 .relation-page {
-  width: 100%;
   padding: 42px;
+}
+
+.relation-page__title {
 }
 
 .relation-page__header {
@@ -117,4 +119,16 @@
   .relation-page__actions {
     justify-content: flex-start;
   }
+}
+.relation-page__status {
+  margin: -6px 0 16px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #ecfdf5;
+  color: #166534;
+}
+
+.relation-page__status--error {
+  background: #fef2f2;
+  color: #b91c1c;
 }
