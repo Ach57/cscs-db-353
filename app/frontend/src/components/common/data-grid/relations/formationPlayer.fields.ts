@@ -1,5 +1,5 @@
 import type { ColDef } from "ag-grid-community";
-import type { FormationPlayer } from "../types/formation";
+import type { FormationPlayer } from "../../../../types/formation";
 
 export const formationPlayerFields: ColDef<FormationPlayer>[] = [
   {

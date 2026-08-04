@@ -1,7 +1,7 @@
 import type { ColDef } from "ag-grid-community";
 import type {
   PersonnelAssignment,
-} from "../types/personnel";
+} from "../../../../types/personnel";
 
 export const personnelAssignmentFields: ColDef<PersonnelAssignment>[] = [
   {

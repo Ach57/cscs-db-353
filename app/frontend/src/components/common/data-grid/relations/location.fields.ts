@@ -1,5 +1,5 @@
 import type { ColDef } from "ag-grid-community";
-import type { Location } from "../types/location";
+import type { Location } from "../../../../types/location";
 export const locationFields: ColDef<Location>[] = [
   {
     field: "location_id",

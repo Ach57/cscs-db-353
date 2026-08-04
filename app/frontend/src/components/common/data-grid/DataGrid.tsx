@@ -76,8 +76,8 @@ export default function DataGrid<T extends object>({
         paginationPageSizeSelector={[10, 20, 50, 100]}
         rowSelection={{
           mode: "multiRow",
-          checkboxes: true,
-          headerCheckbox: true,
+          checkboxes: false,
+          headerCheckbox: false,
         }}
         getRowId={
           getRowId
