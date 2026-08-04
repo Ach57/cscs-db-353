@@ -1,24 +1,18 @@
 .app-layout {
+  width: 100%;
   min-height: 100vh;
   background: #f8fafc;
 }
 
 .app-body {
-  display: flex;
+  width: 100%;
+  min-height: 100vh;
   padding-top: 76px;
 }
 
 .main-content {
   min-height: calc(100vh - 76px);
-  flex: 1;
-  margin-left: 280px;
+  width: calc(100vw - 329px);
+  margin-left: 232px;
   padding: 64px 48px;
-  background: #ffffff;
-}
-
-@media (max-width: 900px) {
-  .main-content {
-    margin-left: 220px;
-    padding: 40px 24px;
-  }
 }

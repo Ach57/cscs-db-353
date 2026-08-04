@@ -1,0 +1,25 @@
+.data-grid-container {
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  border-radius: 10px;
+}
+
+.data-grid-container .ag-root-wrapper {
+  width: max-content;
+  min-width: 100%;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* Keep cell values on one line at their full column width. */
+.data-grid-container .ag-cell {
+  white-space: nowrap;
+}
+
+/* Optional: keep the blue header visible when scrolling down. */
+.data-grid-container .ag-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
