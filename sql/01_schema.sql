@@ -96,7 +96,7 @@ CREATE TABLE ClubMember (
     first_name VARCHAR(50) NOT NULL,
     last_name VARCHAR(50) NOT NULL,
     date_of_birth DATE NOT NULL,
-    gender VARCHAR(20) NOT NULL,
+    gender ENUM('Male', 'Female') NOT NULL,
     registration_date DATE NOT NULL,
     height_cm DECIMAL(5,2),
     weight_kg DECIMAL(5,2),
@@ -107,6 +107,7 @@ CREATE TABLE ClubMember (
     city VARCHAR(60),
     province CHAR(2),
     postal_code VARCHAR(10),
+    email VARCHAR(100),
     FOREIGN KEY (location_id) REFERENCES Location(location_id)
 );
 
@@ -118,6 +119,7 @@ CREATE TABLE ClubMemberFamilyRelation (
         'Father', 'Mother', 'Grandfather', 'Grandmother',
         'Tutor', 'Partner', 'Friend', 'Other'
     ) NOT NULL,
+    family_member_type ENUM('Primary', 'Secondary') NOT NULL,
     start_date DATE NOT NULL,
     end_date DATE,
     UNIQUE (membership_number, family_member_id, start_date),
@@ -197,6 +199,7 @@ CREATE TABLE TeamFormation (
     head_coach_id INT NOT NULL,
     team_name VARCHAR(100) NOT NULL,
     score INT,
+    team_category ENUM('Boys', 'Girls') NOT NULL,
     FOREIGN KEY (session_id)
         REFERENCES Session(session_id)
         ON DELETE CASCADE,
