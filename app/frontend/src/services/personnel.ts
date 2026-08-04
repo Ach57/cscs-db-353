@@ -1,28 +1,35 @@
-import { api } from "./api";
 import { createCrudApi } from "./crudApi";
-import type { Personnel,PersonnelInput,PersonnelAssignment } from "../types/personnel";
+import { createLocalStorageCrudApi } from "./localStorageCrudApi";
+import type { Personnel, PersonnelInput } from "../types/personnel";
 
-export const listPersonnel = () => api.get<Personnel[]>("/api/personnel");
+const seed: Personnel[] = [
+  {
+    personnel_id: 1,
+    first_name: "Nadia",
+    last_name: "Martin",
+    date_of_birth: "1984-04-15",
+    ssn: "111-222-333",
+    medicare_number: "MART84041501",
+    phone_number: "514-555-3100",
+    address: "10 Club Avenue",
+    city: "Montreal",
+    province: "QC",
+    postal_code: "H2X 2B2",
+    email: "nadia.martin@example.ca",
+    role: "General Manager",
+    mandate: "Salaried",
+  },
+];
 
-export const getPersonnel = (id:number) => api.get<Personnel>(`/api/personnel/${id}`);
+const mockApi = createLocalStorageCrudApi<Personnel, PersonnelInput, PersonnelInput>({
+  storageKey: "cscs.personnel",
+  idField: "personnel_id",
+  seed,
+  fromCreate: (input, id) => ({ personnel_id: id, ...input }),
+});
 
-export const createPersonnel = (input:PersonnelInput) => api.post<Personnel>("/api/personnel",input);
+const realApi = createCrudApi<Personnel, PersonnelInput, PersonnelInput>("/api/personnel");
 
-export const updatePersonnel = (id:number,input:Partial<PersonnelInput>) => api.put<Personnel>(`/api/personnel/${id}`,input);
-
-export const deletePersonnel = (id:number) => api.delete(`/api/personnel/${id}`);
-
-export const assignPersonnel = (input:Omit<PersonnelAssignment,"assignment_id">) => api.post<PersonnelAssignment>("/api/personnel/assignments",input);
-
-export const endPersonnelAssignment = (id:number,end_date:string) => api.put<PersonnelAssignment>(`/api/personnel/assignments/${id}/end`,{end_date});
-
-export const listPersonnelAssignments = (id:number) => api.get<PersonnelAssignment[]>(`/api/personnel/${id}/assignments`);
-
-
-export type CreatePersonnelInput =
-  Omit<Personnel, "personnel_id">;
-
-export const personnelApi =
-  createCrudApi<Personnel, CreatePersonnelInput>(
-    "/api/personnel",
-  );
+export const personnelApi = import.meta.env.VITE_USE_MOCK_API === "false"
+  ? realApi
+  : mockApi;
