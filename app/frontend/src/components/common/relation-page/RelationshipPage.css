@@ -2,7 +2,8 @@
   padding: 42px;
 }
 
-.relation-page__title {
+.relation-page__tools {
+    padding: 0 clamp(24px, 5vw, 80px) 0;
 }
 
 .relation-page__header {

@@ -153,6 +153,8 @@ export default function RelationPage<T extends object>({
 
   return (
     <section className="relation-page">
+      <div className="relation-page__tools">
+        
       <header className="relation-page__header">
         <div className="relation-page__title">
           <h1>{title}</h1>
@@ -179,6 +181,8 @@ export default function RelationPage<T extends object>({
 
       {error && <p role="alert" className="relation-page__status relation-page__status--error">{error}</p>}
       {message && <p className="relation-page__status">{message}</p>}
+
+      </div>
 
       <DataGrid<T> rowData={rows} columnDefs={displayedColumns} quickFilterText={searchText}
         editable loading={loading} pagination={rows.length > 20} pageSize={20} getRowId={getRowId}
