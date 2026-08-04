@@ -1,15 +1,30 @@
-import type { ColDef } from "ag-grid-community";
+import type { ColDef, ValueSetterParams } from "ag-grid-community";
 import type { Location } from "../../../../types/location";
+
+function parsePhoneNumbers(value: unknown): { phone_number: string }[] {
+  const uniqueNumbers = new Set(
+    String(value ?? "")
+      .split(/[;,\n]/)
+      .map((phone) => phone.trim())
+      .filter(Boolean),
+  );
+
+  return [...uniqueNumbers].map((phone_number) => ({ phone_number }));
+}
+
 export const locationFields: ColDef<Location>[] = [
   {
     field: "location_id",
     headerName: "Location ID",
     minWidth: 140,
+    editable: false,
   },
   {
     field: "location_type",
     headerName: "Type",
     minWidth: 130,
+    cellEditor: "agSelectCellEditor",
+    cellEditorParams: { values: ["Head", "Branch"] },
   },
   {
     field: "name",
@@ -37,6 +52,20 @@ export const locationFields: ColDef<Location>[] = [
     minWidth: 150,
   },
   {
+    headerName: "Phone Number(s)",
+    colId: "phone_numbers",
+    minWidth: 220,
+    valueGetter: ({ data }) =>
+      data?.location_phone?.map((phone) => phone.phone_number).join(", ") ?? "",
+    valueSetter: (params: ValueSetterParams<Location>) => {
+      if (!params.data) return false;
+      params.data.location_phone = parsePhoneNumbers(params.newValue);
+      return true;
+    },
+    filterValueGetter: ({ data }) =>
+      data?.location_phone?.map((phone) => phone.phone_number).join(" ") ?? "",
+  },
+  {
     field: "web_address",
     headerName: "Website",
     minWidth: 220,
@@ -46,5 +75,7 @@ export const locationFields: ColDef<Location>[] = [
     headerName: "Capacity",
     minWidth: 130,
     filter: "agNumberColumnFilter",
+    cellEditor: "agNumberCellEditor",
+    valueParser: ({ newValue }) => Number(newValue),
   },
 ];

@@ -1,7 +1,7 @@
-export interface CrudApi<T, CreateInput = Partial<T>> {
+export interface CrudApi<T, CreateInput = Partial<T>, UpdateInput = Partial<T>> {
   getAll(): Promise<T[]>;
   create(data: CreateInput): Promise<T>;
-  update(id: string, data: Partial<T>): Promise<T>;
+  update(id: string, data: UpdateInput): Promise<T>;
   remove(id: string): Promise<void>;
 }
 
@@ -29,10 +29,7 @@ async function request<T>(
       "Content-Type": "application/json",
       ...options.headers,
     },
-    body:
-      options.body === undefined
-        ? undefined
-        : JSON.stringify(options.body),
+    body: options.body === undefined ? undefined : JSON.stringify(options.body),
   });
 
   if (!response.ok) {
@@ -40,11 +37,7 @@ async function request<T>(
 
     try {
       const errorBody = await response.json();
-
-      message =
-        errorBody?.message ??
-        errorBody?.detail ??
-        message;
+      message = errorBody?.message ?? errorBody?.detail ?? message;
     } catch {
       // Response was not JSON.
     }
@@ -52,45 +45,24 @@ async function request<T>(
     throw new Error(message);
   }
 
-  if (response.status === 204) {
-    return undefined as T;
-  }
-
+  if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;
 }
 
-export function createCrudApi<T, CreateInput = Partial<T>>(
-  endpoint: string,
-): CrudApi<T, CreateInput> {
+export function createCrudApi<
+  T,
+  CreateInput = Partial<T>,
+  UpdateInput = Partial<T>,
+>(endpoint: string): CrudApi<T, CreateInput, UpdateInput> {
   return {
-    getAll() {
-      return request<T[]>(endpoint);
-    },
-
-    create(data) {
-      return request<T>(endpoint, {
-        method: "POST",
-        body: data,
-      });
-    },
-
-    update(id, data) {
-      return request<T>(
-        `${endpoint}/${encodeURIComponent(id)}`,
-        {
-          method: "PUT",
-          body: data,
-        },
-      );
-    },
-
-    remove(id) {
-      return request<void>(
-        `${endpoint}/${encodeURIComponent(id)}`,
-        {
-          method: "DELETE",
-        },
-      );
-    },
+    getAll: () => request<T[]>(endpoint),
+    create: (data) => request<T>(endpoint, { method: "POST", body: data }),
+    update: (id, data) => request<T>(`${endpoint}/${encodeURIComponent(id)}`, {
+      method: "PUT",
+      body: data,
+    }),
+    remove: (id) => request<void>(`${endpoint}/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    }),
   };
 }

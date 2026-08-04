@@ -5,18 +5,25 @@ import DataGrid from "../data-grid/DataGrid";
 import type { CrudApi } from "../../../services/crudApi";
 import "./RelationshipPage.css";
 
-interface RelationPageProps<T extends object> {
+interface RelationPageProps<T extends object, CreateInput = Partial<T>, UpdateInput = Partial<T>> {
   title: string;
   description: string;
   initialData?: T[];
   columnDefs: ColDef<T>[];
   getRowId: (row: T) => string;
   idField: keyof T;
-  api: CrudApi<T, any>;
+  api: CrudApi<T, CreateInput, UpdateInput>;
   createEmptyRow?: () => T;
+  validateRow?: (row: T) => string[];
+  toCreateInput?: (row: T) => CreateInput;
+  toUpdateInput?: (row: T) => UpdateInput;
 }
 
-export default function RelationPage<T extends object>({
+export default function RelationPage<
+  T extends object,
+  CreateInput = Partial<T>,
+  UpdateInput = Partial<T>,
+>({
   title,
   description,
   initialData = [],
@@ -25,7 +32,10 @@ export default function RelationPage<T extends object>({
   idField,
   api,
   createEmptyRow,
-}: RelationPageProps<T>) {
+  validateRow,
+  toCreateInput,
+  toUpdateInput,
+}: RelationPageProps<T, CreateInput, UpdateInput>) {
   const [rows, setRows] = useState<T[]>(initialData);
   const [selectedRows, setSelectedRows] = useState<T[]>([]);
   const [searchText, setSearchText] = useState("");
@@ -92,6 +102,10 @@ export default function RelationPage<T extends object>({
     const selectedIds = new Set(selectedRows.map(getRowId));
     if (selectedIds.size === 0) return;
 
+    if (!window.confirm(`Delete ${selectedIds.size} selected record${selectedIds.size === 1 ? "" : "s"}?`)) {
+      return;
+    }
+
     setSaving(true);
     setError(null);
     setMessage(null);
@@ -121,24 +135,38 @@ export default function RelationPage<T extends object>({
     );
     setDirtyRowIds((current) => new Set(current).add(updatedId));
     setMessage(null);
+    setError(null);
   }
 
   async function handleSave() {
     if (dirtyRowIds.size === 0) return;
 
+    gridApiRef.current?.stopEditing();
     setSaving(true);
     setError(null);
     setMessage(null);
+
     try {
       const changedRows = rows.filter((row) => dirtyRowIds.has(getRowId(row)));
+
+      for (const row of changedRows) {
+        const validationErrors = validateRow?.(row) ?? [];
+        if (validationErrors.length > 0) {
+          throw new Error(validationErrors.join(" "));
+        }
+      }
+
       await Promise.all(
         changedRows.map((row) => {
           const rowId = getRowId(row);
           if (newRowIds.has(rowId)) {
+            if (toCreateInput) return api.create(toCreateInput(row));
             const { [idField]: _temporaryId, ...createPayload } = row;
-            return api.create(createPayload);
+            return api.create(createPayload as CreateInput);
           }
-          return api.update(rowId, row);
+
+          const updatePayload = toUpdateInput ? toUpdateInput(row) : (row as unknown as UpdateInput);
+          return api.update(rowId, updatePayload);
         }),
       );
 
@@ -154,40 +182,65 @@ export default function RelationPage<T extends object>({
   return (
     <section className="relation-page">
       <div className="relation-page__tools">
-        
-      <header className="relation-page__header">
-        <div className="relation-page__title">
-          <h1>{title}</h1>
-          <p>{description}</p>
-        </div>
+        <header className="relation-page__header">
+          <div className="relation-page__title">
+            <h1>{title}</h1>
+            <p>{description}</p>
+          </div>
           <div className="relation-page__count">{rows.length} record{rows.length === 1 ? "" : "s"}</div>
-      </header>
+        </header>
 
-      <div className="relation-page__toolbar">
-        <input className="relation-page__search" type="search" value={searchText}
-          placeholder={`Search ${title.toLowerCase()}...`}
-          onChange={(event) => setSearchText(event.target.value)} />
+        <div className="relation-page__toolbar">
+          <input
+            className="relation-page__search"
+            type="search"
+            value={searchText}
+            placeholder={`Search ${title.toLowerCase()}...`}
+            onChange={(event) => setSearchText(event.target.value)}
+          />
 
-        <div className="relation-page__actions">
-          {createEmptyRow && <button type="button" className="button button--primary" onClick={handleAdd} disabled={saving}>Add record</button>}
-          <button type="button" className="button button--primary" onClick={() => void handleSave()}
-            disabled={dirtyRowIds.size === 0 || saving}>
-            {saving ? "Saving..." : `Save changes${dirtyRowIds.size ? ` (${dirtyRowIds.size})` : ""}`}
-          </button>
-          <button type="button" className="button button--danger" disabled={selectedRows.length === 0 || saving}
-            onClick={() => void handleDeleteSelected()}>Delete selected</button>
+          <div className="relation-page__actions">
+            {createEmptyRow && (
+              <button type="button" className="button button--primary" onClick={handleAdd} disabled={saving}>
+                Add record
+              </button>
+            )}
+            <button
+              type="button"
+              className="button button--primary"
+              onClick={() => void handleSave()}
+              disabled={dirtyRowIds.size === 0 || saving}
+            >
+              {saving ? "Saving..." : `Save changes${dirtyRowIds.size ? ` (${dirtyRowIds.size})` : ""}`}
+            </button>
+            <button
+              type="button"
+              className="button button--danger"
+              disabled={selectedRows.length === 0 || saving}
+              onClick={() => void handleDeleteSelected()}
+            >
+              Delete selected
+            </button>
+          </div>
         </div>
+
+        {error && <p role="alert" className="relation-page__status relation-page__status--error">{error}</p>}
+        {message && <p className="relation-page__status">{message}</p>}
       </div>
 
-      {error && <p role="alert" className="relation-page__status relation-page__status--error">{error}</p>}
-      {message && <p className="relation-page__status">{message}</p>}
-
-      </div>
-
-      <DataGrid<T> rowData={rows} columnDefs={displayedColumns} quickFilterText={searchText}
-        editable loading={loading} pagination={rows.length > 20} pageSize={20} getRowId={getRowId}
+      <DataGrid<T>
+        rowData={rows}
+        columnDefs={displayedColumns}
+        quickFilterText={searchText}
+        editable
+        loading={loading}
+        pagination={rows.length > 20}
+        pageSize={20}
+        getRowId={getRowId}
         onGridReady={(apiInstance) => { gridApiRef.current = apiInstance; }}
-        onSelectionChanged={setSelectedRows} onCellValueChanged={handleCellValueChanged} />
+        onSelectionChanged={setSelectedRows}
+        onCellValueChanged={handleCellValueChanged}
+      />
     </section>
   );
 }
