@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Layout from "../components/layout/Layout";
 import Dashboard from "../pages/Dashboard";
+import Locations from "../pages/Locations";
 
 function PlaceholderPage({ title }: { title: string }) {
   return (
@@ -20,7 +21,7 @@ export default function AppRouter() {
 
           <Route
             path="/locations"
-            element={<PlaceholderPage title="Locations" />}
+            element={<Locations/>}
           />
 
           <Route
