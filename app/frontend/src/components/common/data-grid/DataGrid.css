@@ -1,0 +1,24 @@
+.data-grid-container {
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  background: white;
+}
+
+.data-grid-container .ag-root-wrapper {
+  width: max-content;
+  min-width: 100%;
+  border: none;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.data-grid-container .ag-cell {
+  white-space: nowrap;
+}
+
+.data-grid-container .ag-header-cell-label {
+  gap: 8px;
+}

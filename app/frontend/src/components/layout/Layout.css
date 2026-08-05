@@ -1,0 +1,24 @@
+.app-layout {
+  width: 100%;
+  min-height: 100vh;
+  background: #f8fafc;
+}
+
+.main-content {
+  width: 100%;
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 190px 0 64px 0;
+}
+
+@media (max-width: 900px) {
+  .main-content {
+    padding-top: 176px;
+  }
+}
+
+@media (max-width: 640px) {
+  .main-content {
+    padding: 164px 18px 40px;
+  }
+}
