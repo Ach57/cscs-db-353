@@ -233,3 +233,20 @@ FROM ClubMember cm
 JOIN FIFAParticipation fp ON fp.membership_number = cm.membership_number
 GROUP BY cm.membership_number, member_name
 HAVING COUNT(fp.game_id) >= 4;
+
+
+-- QUERY-11: Members with ≥5 FIFA games
+USE wqc353_1;
+
+SELECT
+    cm.membership_number,
+    CONCAT(cm.first_name, ' ', cm.last_name) AS member_name,
+    COUNT(fp.game_id) AS games_played,
+    MIN(YEAR(fg.game_date)) AS min_year_played,
+    MAX(YEAR(fg.game_date)) AS max_year_played
+FROM ClubMember cm
+JOIN FIFAParticipation fp ON fp.membership_number = cm.membership_number
+JOIN FIFAGame fg ON fg.game_id = fp.game_id
+GROUP BY cm.membership_number, member_name
+HAVING COUNT(fp.game_id) >= 5
+ORDER BY games_played DESC;
