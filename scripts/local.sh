@@ -9,7 +9,7 @@
 # FOR MORE CHECK ./docker-compose.yml
 # ---------------------------------------------
 
-# CMDS: start, stop, restart, reset, logs, queries, verify
+# CMDS: start, stop, restart, reset, logs, connect, queries, verify
 # SPECIAL CMDS: 
 #         - adminer-remote-start (Adminer GUI pointed at AITS server (port 8081))
 #         - adminer-remote-stop
@@ -55,6 +55,11 @@ case "$1" in
     docker exec -i -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" wqc353_1-db mysql -u root wqc353_1 < sql/04_verify.sql
     ;;
 
+  connect)
+    echo "Connecting to local MySQL (wqc353_1)..."
+    docker exec -it -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" wqc353_1-db mysql -u root wqc353_1
+    ;;
+
   adminer-remote-start)
     echo "Starting Adminer pointed at AITS (wqc353.encs.concordia.ca)..."
     echo "Open http://localhost:8081 — login with your AITS DB user/password/db from the email."
@@ -74,6 +79,7 @@ case "$1" in
     echo "  ./docker.sh restart"
     echo "  ./docker.sh reset"
     echo "  ./docker.sh logs"
+    echo "  ./docker.sh connect               # open interactive MySQL shell"
     echo "  ./docker.sh queries               # run 03_queries.sql, print results"
     echo "  ./docker.sh verify                # run 04_verify.sql, print COUNT(*) per table"
     echo "  ./docker.sh adminer-remote-start   # Adminer GUI pointed at AITS server (port 8081)"
