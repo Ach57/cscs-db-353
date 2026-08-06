@@ -1,7 +1,7 @@
-import RelationPage from "../components/common/relation-page/RelationPage";
-import { personnelFields } from "../components/common/data-grid/relations/personnel.fields";
-import type { Personnel, PersonnelInput } from "../types/personnel";
-import { personnelApi } from "../services/personnel";
+import RelationPage from "../../components/common/relation-page/RelationPage";
+import { familyMemberFields } from "../../components/common/data-grid/relations/familyMember.fields";
+import type { FamilyMember, FamilyMemberInput } from "../../types/member";
+import { familyMemberApi } from "../../services/members";
 
 const POSTAL_CODE = /^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$/;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -10,7 +10,7 @@ function cleanNullable(value: string | null): string | undefined {
   return value?.trim() || undefined;
 }
 
-function toInput(row: Personnel): PersonnelInput {
+function toInput(row: FamilyMember): FamilyMemberInput {
   return {
     first_name: row.first_name.trim(), last_name: row.last_name.trim(),
     date_of_birth: row.date_of_birth, ssn: row.ssn.trim(),
@@ -18,11 +18,11 @@ function toInput(row: Personnel): PersonnelInput {
     phone_number: cleanNullable(row.phone_number), address: cleanNullable(row.address),
     city: cleanNullable(row.city), province: row.province?.trim().toUpperCase() || undefined,
     postal_code: row.postal_code?.trim().toUpperCase() || undefined,
-    email: cleanNullable(row.email), role: row.role, mandate: row.mandate,
+    email: cleanNullable(row.email),
   };
 }
 
-function validate(row: Personnel): string[] {
+function validate(row: FamilyMember): string[] {
   const errors: string[] = [];
   if (!row.first_name.trim()) errors.push("First name is required.");
   if (!row.last_name.trim()) errors.push("Last name is required.");
@@ -34,20 +34,19 @@ function validate(row: Personnel): string[] {
   return errors;
 }
 
-export default function PersonnelPage() {
+export default function FamilyMembers() {
   return (
-    <RelationPage<Personnel, PersonnelInput, PersonnelInput>
-      title="Personnel"
-      description="Manage personnel profiles."
-      columnDefs={personnelFields}
-      api={personnelApi}
-      idField="personnel_id"
-      getRowId={(row) => String(row.personnel_id)}
+    <RelationPage<FamilyMember, FamilyMemberInput, FamilyMemberInput>
+      title="Family Members"
+      description="Manage family member profiles."
+      columnDefs={familyMemberFields}
+      api={familyMemberApi}
+      idField="family_member_id"
+      getRowId={(row) => String(row.family_member_id)}
       createEmptyRow={() => ({
-        personnel_id: -Date.now(), first_name: "", last_name: "", date_of_birth: "",
-        ssn: "", medicare_number: null, address: null, postal_code: null,
-        phone_number: null, email: null, city: null, province: "QC",
-        role: "Other", mandate: "Volunteer",
+        family_member_id: -Date.now(), first_name: "", last_name: "", date_of_birth: "",
+        ssn: "", medicare_number: null, phone_number: null, email: null,
+        address: null, city: null, province: "QC", postal_code: null,
       })}
       validateRow={validate}
       toCreateInput={toInput}

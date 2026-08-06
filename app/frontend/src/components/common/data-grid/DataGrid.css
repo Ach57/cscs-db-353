@@ -22,3 +22,13 @@
 .data-grid-container .ag-header-cell-label {
   gap: 8px;
 }
+/* The grid itself is intentionally edge-to-edge. */
+.data-grid-container {
+  border-right: 0;
+  border-left: 0;
+  border-radius: 0;
+}
+
+.data-grid-container .ag-root-wrapper {
+  border-radius: 0;
+}
