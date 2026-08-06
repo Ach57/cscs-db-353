@@ -6,8 +6,8 @@ import { personnelApi } from "../services/personnel";
 const POSTAL_CODE = /^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$/;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function cleanNullable(value: string | null): string | null {
-  return value?.trim() || null;
+function cleanNullable(value: string | null): string | undefined {
+  return value?.trim() || undefined;
 }
 
 function toInput(row: Personnel): PersonnelInput {
@@ -16,8 +16,8 @@ function toInput(row: Personnel): PersonnelInput {
     date_of_birth: row.date_of_birth, ssn: row.ssn.trim(),
     medicare_number: cleanNullable(row.medicare_number),
     phone_number: cleanNullable(row.phone_number), address: cleanNullable(row.address),
-    city: cleanNullable(row.city), province: row.province?.trim().toUpperCase() || null,
-    postal_code: row.postal_code?.trim().toUpperCase() || null,
+    city: cleanNullable(row.city), province: row.province?.trim().toUpperCase() || undefined,
+    postal_code: row.postal_code?.trim().toUpperCase() || undefined,
     email: cleanNullable(row.email), role: row.role, mandate: row.mandate,
   };
 }

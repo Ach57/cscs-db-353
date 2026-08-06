@@ -1,10 +1,6 @@
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { api } from "../services/api";
 import "./Dashboard.css";
-
-export default function Dashboard() {
-  return (
-    <section className="dashboard">
-      <h2>Dashboard</h2>
-      <p>Welcome to the Country Soccer Club System.</p>
-    </section>
-  );
-}
+type Health={status:string;database:string;latency_ms:number};
+export default function Dashboard(){const [health,setHealth]=useState<Health|null>(null);useEffect(()=>{api.get<Health>("/health").then(setHealth).catch(()=>setHealth(null))},[]);return <section className="dashboard"><div className="hero"><div><p className="eyebrow">COMP 353 · Summer 2026</p><h1>Country Soccer Club System</h1><p>Database administration and demonstration interface for the main project.</p></div><div className={health?"connection connection--ok":"connection connection--bad"}><strong>{health?"AITS / MySQL connected":"Backend not connected"}</strong><span>{health?`${health.latency_ms} ms response`:"Check API URL and server"}</span></div></div><div className="dashboard-grid">{[["Locations","Create, edit, delete and display club locations.","/locations"],["People","Manage personnel, family members and club members.","/personnel"],["Sessions & formations","Schedule sessions and create team formations.","/team-formations"],["Payments","Record annual fees and installments.","/payments"],["Reports Q8–Q19","Run required complex queries and inspect results.","/reports"],["Email demo","Generate and persist weekly schedule emails.","/reports"]].map(([t,d,p])=><Link className="dashboard-card" to={p} key={t}><h2>{t}</h2><p>{d}</p><span>Open →</span></Link>)}</div></section>}

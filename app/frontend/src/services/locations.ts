@@ -1,73 +1,26 @@
 import type { CrudApi } from "./crudApi";
-import { createCrudApi } from "./crudApi";
-import { createLocalStorageCrudApi } from "./localStorageCrudApi";
+import { api } from "./api";
 import type { Location, LocationInput, LocationPhone } from "../types/location";
 
-function normalizePhones(value: unknown): LocationPhone[] {
-  if (!Array.isArray(value)) return [];
-  const unique = new Set(
-    value.map((entry) => {
-      if (typeof entry === "string") return entry.trim();
-      if (entry && typeof entry === "object" && "phone_number" in entry) {
-        return String(entry.phone_number).trim();
-      }
-      return "";
-    }).filter(Boolean),
-  );
-  return [...unique].map((phone_number) => ({ phone_number }));
+type LocationRecord = Omit<Location, "location_phone">;
+async function enrich(row: LocationRecord): Promise<Location> {
+  const phones = await api.get<(LocationPhone & {location_id?:number})[]>(`/locations/${row.location_id}/phones`);
+  return { ...row, location_phone: phones.map(({phone_number}) => ({phone_number})) };
 }
-
-function fromInput(input: LocationInput, id: number): Location {
-  return {
-    location_id: id,
-    location_type: input.location_type,
-    name: input.name,
-    address: input.address,
-    city: input.city,
-    province: input.province,
-    postal_code: input.postal_code,
-    web_address: input.web_address,
-    capacity: Number(input.capacity),
-    location_phone: normalizePhones(input.phone_numbers),
-  };
+function base(input: LocationInput) {
+  const { phone_numbers: _phones, web_address, ...rest } = input;
+  return { ...rest, ...(web_address ? {web_address} : {}) };
 }
-
-const seed: Location[] = [
-  {
-    location_id: 1,
-    location_type: "Head",
-    name: "Downtown Soccer Centre",
-    address: "123 Main St",
-    city: "Montreal",
-    province: "QC",
-    postal_code: "H2X 1A1",
-    web_address: "https://downtownsoccer.ca",
-    capacity: 450,
-    location_phone: [{ phone_number: "514-555-1000" }],
-  },
-  {
-    location_id: 2,
-    location_type: "Branch",
-    name: "West Island Complex",
-    address: "88 Lakeshore Blvd",
-    city: "Dorval",
-    province: "QC",
-    postal_code: "H9S 4B5",
-    web_address: "https://westislandsoccer.ca",
-    capacity: 300,
-    location_phone: [{ phone_number: "514-555-2000" }],
-  },
-];
-
-const mockApi = createLocalStorageCrudApi<Location, LocationInput, LocationInput>({
-  storageKey: "cscs.locations",
-  idField: "location_id",
-  seed,
-  fromCreate: fromInput,
-  applyUpdate: (current, input) => ({ ...fromInput(input, current.location_id) }),
-});
-
-const realApi = createCrudApi<Location, LocationInput, LocationInput>("/api/locations");
-
-export const locationApi: CrudApi<Location, LocationInput, LocationInput> =
-  import.meta.env.VITE_USE_MOCK_API === "false" ? realApi : mockApi;
+async function syncPhones(id:number, desired:string[]) {
+  const current = await api.get<(LocationPhone & {location_id?:number})[]>(`/locations/${id}/phones`);
+  const currentSet = new Set(current.map(p=>p.phone_number));
+  const desiredSet = new Set(desired.map(p=>p.trim()).filter(Boolean));
+  await Promise.all([...currentSet].filter(p=>!desiredSet.has(p)).map(p=>api.delete(`/locations/${id}/phones/${encodeURIComponent(p)}`)));
+  await Promise.all([...desiredSet].filter(p=>!currentSet.has(p)).map(phone_number=>api.post(`/locations/${id}/phones`,{phone_number})));
+}
+export const locationApi: CrudApi<Location, LocationInput, LocationInput> = {
+  async getAll(){ return Promise.all((await api.get<LocationRecord[]>("/locations")).map(enrich)); },
+  async create(input){ const row=await api.post<LocationRecord>("/locations",base(input)); await syncPhones(row.location_id,input.phone_numbers); return enrich(row); },
+  async update(id,input){ const row=await api.put<LocationRecord>(`/locations/${id}`,base(input)); await syncPhones(Number(id),input.phone_numbers); return enrich(row); },
+  remove(id){ return api.delete(`/locations/${id}`); },
+};

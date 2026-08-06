@@ -4,26 +4,8 @@ import Dashboard from "../pages/Dashboard";
 import Locations from "../pages/Locations";
 import Personnel from "../pages/Personnel";
 import FamilyMembers from "../pages/FamilyMembers";
-
-function PlaceholderPage({ title }: { title: string }) {
-  return <section><h2>{title}</h2><p>This page is under development.</p></section>;
-}
-
-export default function AppRouter() {
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route element={<Layout />}>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/locations" element={<Locations />} />
-          <Route path="/personnel" element={<Personnel />} />
-          <Route path="/family-members" element={<FamilyMembers />} />
-          <Route path="/club-members" element={<PlaceholderPage title="Club Members" />} />
-          <Route path="/team-formations" element={<PlaceholderPage title="Team Formations" />} />
-          <Route path="/payments" element={<PlaceholderPage title="Payments" />} />
-          <Route path="/reports" element={<PlaceholderPage title="Reports" />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
-  );
-}
+import ClubMembers from "../pages/ClubMembers";
+import TeamFormations from "../pages/TeamFormations";
+import Payments from "../pages/Payments";
+import Reports from "../pages/Reports";
+export default function AppRouter(){return <BrowserRouter><Routes><Route element={<Layout/>}><Route path="/" element={<Dashboard/>}/><Route path="/locations" element={<Locations/>}/><Route path="/personnel" element={<Personnel/>}/><Route path="/family-members" element={<FamilyMembers/>}/><Route path="/club-members" element={<ClubMembers/>}/><Route path="/team-formations" element={<TeamFormations/>}/><Route path="/payments" element={<Payments/>}/><Route path="/reports" element={<Reports/>}/><Route path="*" element={<Dashboard/>}/></Route></Routes></BrowserRouter>}
