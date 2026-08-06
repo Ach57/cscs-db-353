@@ -1,3 +1,17 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
+import Button from "../../components/common/Button";
+import { Field, Input, Select } from "../../components/common/Input";
+import {
+  CardHeader,
+  ContentCard,
+  EmptyState,
+  PageHeader,
+  PageShell,
+  StatusMessage,
+  TableContainer,
+  Toolbar,
+  ToolbarActions,
+} from "../../components/common/page/ManagementPage";
 import {
   assignPlayer,
   getMemberAssignmentOverview,
@@ -5,20 +19,12 @@ import {
   updatePlayerAssignment,
 } from "../../services/formations";
 import type { MemberAssignmentOverview, PlayerRole } from "../../types/formation";
-import { useCallback, useEffect, useMemo, useState } from "react";
 
 const roles: PlayerRole[] = [
-  "Goalkeeper",
-  "Right Fullback",
-  "Left Fullback",
-  "Center Back",
-  "Center Back or Sweeper",
-  "Defending or Holding Midfielder",
-  "Right Midfielder or Winger",
-  "Central Midfielder",
-  "Striker",
-  "Attacking Midfielder",
-  "Left Winger",
+  "Goalkeeper", "Right Fullback", "Left Fullback", "Center Back",
+  "Center Back or Sweeper", "Defending or Holding Midfielder",
+  "Right Midfielder or Winger", "Central Midfielder", "Striker",
+  "Attacking Midfielder", "Left Winger",
 ];
 
 export default function Assignments() {
@@ -42,9 +48,7 @@ export default function Assignments() {
     }
   }, []);
 
-  useEffect(() => {
-    void loadOverview();
-  }, [loadOverview]);
+  useEffect(() => { void loadOverview(); }, [loadOverview]);
 
   const visibleMembers = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -58,23 +62,16 @@ export default function Assignments() {
   async function action(kind: "add" | "update" | "remove") {
     setError("");
     setMessage("");
-
     try {
       const formation = Number(formationId);
       const member = Number(memberId);
-      if (!formation || !member) {
-        throw new Error("Formation ID and membership number are required.");
-      }
+      if (!formation || !member) throw new Error("Formation ID and membership number are required.");
 
       if (kind === "add") await assignPlayer(formation, member, role);
       else if (kind === "update") await updatePlayerAssignment(formation, member, role);
       else await removePlayerAssignment(formation, member);
 
-      setMessage(
-        kind === "remove"
-          ? "Player assignment removed."
-          : `Player assignment ${kind === "add" ? "created" : "updated"}.`,
-      );
+      setMessage(kind === "remove" ? "Player assignment removed." : `Player assignment ${kind === "add" ? "created" : "updated"}.`);
       await loadOverview();
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Assignment failed.");
@@ -82,77 +79,52 @@ export default function Assignments() {
   }
 
   return (
-    <div className="assignment-panel">
-      <h1>Formation Player Assignment</h1>
-      <p>
-        Add, edit or remove a player. Backend integrity rules reject gender, location,
-        and less-than-three-hour conflicts.
-      </p>
-      <div className="report-controls">
-        <label>
-          Formation ID
-          <input value={formationId} onChange={(event) => setFormationId(event.target.value)} inputMode="numeric" />
-        </label>
-        <label>
-          Membership number
-          <input value={memberId} onChange={(event) => setMemberId(event.target.value)} inputMode="numeric" />
-        </label>
-        <label>
-          Role
-          <select value={role} onChange={(event) => setRole(event.target.value as PlayerRole)}>
-            {roles.map((playerRole) => <option key={playerRole}>{playerRole}</option>)}
-          </select>
-        </label>
-        <button className="button button--primary" onClick={() => void action("add")}>Assign</button>
-        <button className="button" onClick={() => void action("update")}>Update role</button>
-        <button className="button button--danger" onClick={() => void action("remove")}>Remove</button>
-      </div>
-      {error && <p className="relation-page__status relation-page__status--error">{error}</p>}
-      {message && <p className="relation-page__status">{message}</p>}
+    <PageShell className="assignment-page">
+      <PageHeader
+        eyebrow="Team formations"
+        title="Player Assignments"
+        description="Assign, update, or remove players while preserving the existing backend integrity checks."
+        aside={<div className="management-health management-health--ok"><strong>{overview.length} members</strong><span>{visibleMembers.length} currently shown</span></div>}
+      />
 
-      <section className="assignment-overview">
-        <div className="assignment-overview__header">
-          <div>
-            <h2>All member assignments</h2>
-            <p>Every member is listed. Unassigned members show a null team value.</p>
-          </div>
-          <label>
-            Search members
-            <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="ID, name, location or team" />
-          </label>
-        </div>
-        {loadingOverview ? <p>Loading assignments...</p> : (
-          <div className="report-table-wrap">
+      <Toolbar>
+        <Field label="Formation ID"><Input value={formationId} onChange={(event) => setFormationId(event.target.value)} inputMode="numeric" /></Field>
+        <Field label="Membership number"><Input value={memberId} onChange={(event) => setMemberId(event.target.value)} inputMode="numeric" /></Field>
+        <Field label="Player role" className="assignment-page__role"><Select  style={{ maxWidth: "-webkit-fit-content" }} value={role} onChange={(event) => setRole(event.target.value as PlayerRole)}>{roles.map((playerRole) => <option key={playerRole}>{playerRole}</option>)}</Select></Field>
+        <ToolbarActions>
+          <Button variant="primary" onClick={() => void action("add")}>Assign</Button>
+          <Button onClick={() => void action("update")}>Update role</Button>
+          <Button variant="danger" onClick={() => void action("remove")}>Remove</Button>
+        </ToolbarActions>
+      </Toolbar>
+
+      {error && <StatusMessage tone="error">{error}</StatusMessage>}
+      {message && <StatusMessage>{message}</StatusMessage>}
+
+      <ContentCard>
+        <CardHeader
+          title="All member assignments"
+          description="Select a row to reuse that membership number in the assignment form."
+          meta={`${visibleMembers.length} result${visibleMembers.length === 1 ? "" : "s"}`}
+        />
+        <div className="assignment-page__search"><Field label="Search members"><Input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="ID, name, location, or team" /></Field></div>
+        {loadingOverview ? <EmptyState>Loading assignments...</EmptyState> : visibleMembers.length === 0 ? <EmptyState>No matching members found.</EmptyState> : (
+          <TableContainer minWidth={760}>
             <table>
-              <thead>
-                <tr>
-                  <th>Member ID</th>
-                  <th>Member</th>
-                  <th>Current location</th>
-                  <th>Assigned team(s)</th>
-                  <th>Count</th>
+              <thead><tr><th>Member ID</th><th>Member</th><th>Current location</th><th>Assigned team(s)</th><th>Count</th></tr></thead>
+              <tbody>{visibleMembers.map((member) => (
+                <tr key={member.membership_number} className="assignment-page__row" onClick={() => setMemberId(String(member.membership_number))} title="Use this membership number">
+                  <td>{member.membership_number}</td>
+                  <td>{member.first_name} {member.last_name}</td>
+                  <td>{member.location_name}</td>
+                  <td>{member.assigned_teams ?? <span className="assignment-page__null">Not assigned</span>}</td>
+                  <td>{member.assignment_count}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {visibleMembers.map((member) => (
-                  <tr
-                    key={member.membership_number}
-                    className="assignment-overview__row"
-                    onClick={() => setMemberId(String(member.membership_number))}
-                    title="Click to use this membership number"
-                  >
-                    <td>{member.membership_number}</td>
-                    <td>{member.first_name} {member.last_name}</td>
-                    <td>{member.location_name}</td>
-                    <td>{member.assigned_teams ?? <span className="assignment-overview__null">null</span>}</td>
-                    <td>{member.assignment_count}</td>
-                  </tr>
-                ))}
-              </tbody>
+              ))}</tbody>
             </table>
-          </div>
+          </TableContainer>
         )}
-      </section>
-    </div>
+      </ContentCard>
+    </PageShell>
   );
 }

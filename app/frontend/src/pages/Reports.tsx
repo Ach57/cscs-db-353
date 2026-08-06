@@ -1,4 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
+import Button from "../components/common/Button";
+import { Field, Input, Select } from "../components/common/Input";
+import {
+  CardHeader, ContentCard, EmptyState, PageHeader, PageShell, StatusMessage,
+  TableContainer, Toolbar, ToolbarActions,
+} from "../components/common/page/ManagementPage";
 import { api } from "../services/api";
 
 type ReportParam = "location_id" | "start_date" | "end_date";
@@ -39,14 +45,12 @@ export default function Reports() {
   }, [selected, needsLocation, needsStart, needsEnd]);
 
   async function run() {
-    setLoading(true);
-    setError("");
+    setLoading(true); setError("");
     try {
       if (needsLocation && !locationId) throw new Error("Location ID is required for this report.");
       if (needsStart && !start) throw new Error("Start date is required for this report.");
       if (needsEnd && !end) throw new Error("End date is required for this report.");
       if (needsStart && needsEnd && start > end) throw new Error("Start date must be on or before end date.");
-
       const query = new URLSearchParams();
       if (needsLocation) query.set("location_id", locationId);
       if (needsStart) query.set("start_date", start);
@@ -54,43 +58,50 @@ export default function Reports() {
       setResult(await api.get<ReportResult>(`/reports/${selected}${query.size ? `?${query}` : ""}`));
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Report failed.");
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   }
 
   async function emails() {
-    setEmailMessage("");
-    setError("");
+    setEmailMessage(""); setError("");
     try {
-      const data = await api.post<{ generated_count:number }>("/email-logs/generate-weekly", {
-        from_date: new Date().toISOString().slice(0, 10),
-        persist: true,
-      });
+      const data = await api.post<{ generated_count:number }>("/email-logs/generate-weekly", { from_date: new Date().toISOString().slice(0, 10), persist: true });
       setEmailMessage(`${data.generated_count} weekly email record(s) generated and logged.`);
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Email generation failed.");
     }
   }
 
-  return <section className="report-page">
-    <header className="report-header">
-      <div><h1>Project Reports & Demo Tools</h1><p>Run Q8–Q19, verify the AITS connection, and demonstrate weekly email generation.</p></div>
-      <div className={`health ${health ? "health--ok" : "health--bad"}`}>{health ? `Database connected · ${health.latency_ms} ms` : "Database unavailable"}</div>
-    </header>
-    <div className="report-controls">
-      <label>Query<select value={selected} onChange={(event) => setSelected(Number(event.target.value))}>{catalog.map((item) => <option key={item.id} value={item.id}>Q{item.id} · {item.status}</option>)}</select></label>
-      <label className={!needsLocation ? "report-control--disabled" : ""}>Location ID<input value={locationId} onChange={(event) => setLocationId(event.target.value)} inputMode="numeric" disabled={!needsLocation} placeholder={needsLocation ? "Required" : "Not used"} /></label>
-      <label className={!needsStart ? "report-control--disabled" : ""}>Start date<input type="date" value={start} onChange={(event) => setStart(event.target.value)} disabled={!needsStart} /></label>
-      <label className={!needsEnd ? "report-control--disabled" : ""}>End date<input type="date" value={end} onChange={(event) => setEnd(event.target.value)} disabled={!needsEnd} /></label>
-      <button className="button button--primary" onClick={() => void run()} disabled={loading}>{loading ? "Running..." : "Run report"}</button>
-      <button className="button" onClick={() => void emails()}>Generate weekly emails</button>
-    </div>
-    <p className="report-parameter-help">Required inputs: {required.length ? required.map((param) => param.replace("_", " ")).join(", ") : "none"}.</p>
-    {selectedReport && <p className="report-description">{selectedReport.description}</p>}
-    {error && <p role="alert" className="relation-page__status relation-page__status--error">{error}</p>}
-    {emailMessage && <p className="relation-page__status">{emailMessage}</p>}
-    {result?.message && <p className="report-warning">{result.message}</p>}
-    {result && <div className="report-results"><h2>Q{result.id} Results <span>{result.rows.length} row(s)</span></h2>{result.rows.length ? <div className="report-table-wrap"><table><thead><tr>{columns.map((column) => <th key={column}>{column.replaceAll("_", " ")}</th>)}</tr></thead><tbody>{result.rows.map((row, index) => <tr key={index}>{columns.map((column) => <td key={column}>{row[column] == null ? "—" : String(row[column])}</td>)}</tr>)}</tbody></table></div> : <p>No rows returned.</p>}</div>}
-  </section>;
+  return (
+    <PageShell className="reports-page">
+      <PageHeader
+        eyebrow="Demo tools"
+        title="Reports"
+        description="Run Q8–Q19, verify the AITS connection, and generate the weekly email records."
+        aside={<div className={`management-health management-health--${health ? "ok" : "bad"}`}><strong>{health ? "Database connected" : "Database unavailable"}</strong><span>{health ? `${health.latency_ms} ms response` : "Check the API server"}</span></div>}
+      />
+
+      <Toolbar>
+        <Field label="Query"><Select value={selected} onChange={(event) => setSelected(Number(event.target.value))}>{catalog.map((item) => <option key={item.id} value={item.id}>Q{item.id} · {item.status}</option>)}</Select></Field>
+        <Field label="Location ID" disabled={!needsLocation}><Input value={locationId} onChange={(event) => setLocationId(event.target.value)} inputMode="numeric" disabled={!needsLocation} placeholder={needsLocation ? "Required" : "Not used"} /></Field>
+        <Field label="Start date" disabled={!needsStart}><Input type="date" value={start} onChange={(event) => setStart(event.target.value)} disabled={!needsStart} /></Field>
+        <Field label="End date" disabled={!needsEnd}><Input type="date" value={end} onChange={(event) => setEnd(event.target.value)} disabled={!needsEnd} /></Field>
+        <ToolbarActions>
+          <Button variant="primary" onClick={() => void run()} disabled={loading}>{loading ? "Running..." : "Run report"}</Button>
+          <Button onClick={() => void emails()}>Generate weekly emails</Button>
+        </ToolbarActions>
+      </Toolbar>
+
+      {selectedReport && <ContentCard className="reports-page__description"><CardHeader title={`Q${selectedReport.id} · ${selectedReport.status}`} description={selectedReport.description} meta={`Inputs: ${required.length ? required.map((param) => param.replace("_", " ")).join(", ") : "none"}`} /></ContentCard>}
+      {error && <StatusMessage tone="error">{error}</StatusMessage>}
+      {emailMessage && <StatusMessage>{emailMessage}</StatusMessage>}
+      {result?.message && <StatusMessage tone="warning">{result.message}</StatusMessage>}
+
+      {result && (
+        <ContentCard>
+          <CardHeader title={`Q${result.id} results`} meta={`${result.rows.length} row${result.rows.length === 1 ? "" : "s"}`} />
+          {result.rows.length ? <TableContainer><table><thead><tr>{columns.map((column) => <th key={column}>{column.replaceAll("_", " ")}</th>)}</tr></thead><tbody>{result.rows.map((row, index) => <tr key={index}>{columns.map((column) => <td key={column}>{row[column] == null ? "—" : String(row[column])}</td>)}</tr>)}</tbody></table></TableContainer> : <EmptyState>No rows returned.</EmptyState>}
+        </ContentCard>
+      )}
+    </PageShell>
+  );
 }

@@ -197,6 +197,11 @@ code {
   border-color: #b6c8dc;
   background: #ffffff;
   transform: translateY(-1px);
+  color: #315b8f !important;
+}
+
+.workspace-tab:hover * {
+  color: #315b8f !important;
 }
 
 .workspace-tab > span {
