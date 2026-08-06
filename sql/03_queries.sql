@@ -250,3 +250,80 @@ JOIN FIFAGame fg ON fg.game_id = fp.game_id
 GROUP BY cm.membership_number, member_name
 HAVING COUNT(fp.game_id) >= 5
 ORDER BY games_played DESC;
+-- QUERY-9: Primary family members with ≥2 FIFA-participating
+USE wqc353_1;
+
+WITH ActiveRelations AS (
+    SELECT r.family_member_id, r.membership_number, r.relationship_type
+    FROM ClubMemberFamilyRelation r
+    WHERE r.end_date IS NULL
+),
+FifaChildren AS (
+    SELECT DISTINCT ar.family_member_id, ar.membership_number
+    FROM ActiveRelations ar
+    JOIN FIFAParticipation fp ON fp.membership_number = ar.membership_number
+),
+QualifyingFamilies AS (
+    SELECT family_member_id
+    FROM FifaChildren
+    GROUP BY family_member_id
+    HAVING COUNT(DISTINCT membership_number) >= 2
+)
+SELECT
+    fm.first_name AS family_first_name,
+    fm.last_name AS family_last_name,
+    cm.membership_number,
+    cm.first_name AS child_first_name,
+    cm.last_name AS child_last_name,
+    cm.date_of_birth AS child_dob,
+    ar.relationship_type
+FROM QualifyingFamilies qf
+JOIN FamilyMember fm ON fm.family_member_id = qf.family_member_id
+JOIN FifaChildren fc ON fc.family_member_id = qf.family_member_id
+JOIN ActiveRelations ar ON ar.family_member_id = fc.family_member_id AND ar.membership_number = fc.membership_number
+JOIN ClubMember cm ON cm.membership_number = fc.membership_number
+ORDER BY fm.first_name ASC, fm.last_name ASC, cm.membership_number ASC;
+-- QUERY-8: Locations with ≥2 FIFA participants
+USE wqc353_1;
+
+WITH GM AS (
+    SELECT pa.location_id,
+           CONCAT(p.first_name, ' ', p.last_name) AS gm_name
+    FROM PersonnelAssignment pa
+    JOIN Personnel p ON p.personnel_id = pa.personnel_id
+    WHERE p.role = 'General Manager'
+      AND pa.end_date IS NULL
+),
+MemberCounts AS (
+    SELECT
+        location_id,
+        SUM(CASE WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) < 18 THEN 1 ELSE 0 END) AS num_minor_members,
+        SUM(CASE WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) >= 18 THEN 1 ELSE 0 END) AS num_major_members
+    FROM ClubMember
+    GROUP BY location_id
+),
+FifaCounts AS (
+    SELECT cm.location_id, COUNT(DISTINCT fp.membership_number) AS num_fifa_participants
+    FROM ClubMember cm
+    JOIN FIFAParticipation fp ON fp.membership_number = cm.membership_number
+    GROUP BY cm.location_id
+)
+SELECT
+    l.name AS location_name,
+    l.address,
+    l.city,
+    l.province,
+    l.postal_code,
+    l.web_address,
+    l.location_type,
+    l.capacity,
+    gm.gm_name AS general_manager,
+    COALESCE(mc.num_minor_members, 0) AS num_minor_members,
+    COALESCE(mc.num_major_members, 0) AS num_major_members,
+    fc.num_fifa_participants
+FROM Location l
+JOIN FifaCounts fc ON fc.location_id = l.location_id
+LEFT JOIN GM gm ON gm.location_id = l.location_id
+LEFT JOIN MemberCounts mc ON mc.location_id = l.location_id
+WHERE fc.num_fifa_participants >= 2
+ORDER BY fc.num_fifa_participants DESC;
