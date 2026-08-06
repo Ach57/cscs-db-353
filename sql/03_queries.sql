@@ -327,3 +327,183 @@ LEFT JOIN GM gm ON gm.location_id = l.location_id
 LEFT JOIN MemberCounts mc ON mc.location_id = l.location_id
 WHERE fc.num_fifa_participants >= 2
 ORDER BY fc.num_fifa_participants DESC;
+
+-- QUERY-12: For a given period, report training/game session and player
+-- totals per location, restricted to locations with >= 4 game sessions.
+USE wqc353_1;
+
+SET @start_date = '2025-01-01';
+SET @end_date   = '2025-05-31';
+
+WITH TrainingStats AS (
+    SELECT
+        tf.location_id,
+        COUNT(DISTINCT tf.formation_id) AS num_training_sessions,
+        COUNT(tfa.membership_number)    AS num_training_players
+    FROM TeamFormation tf
+    JOIN Session s ON s.session_id = tf.session_id
+    LEFT JOIN TeamFormationAssignment tfa ON tfa.formation_id = tf.formation_id
+    WHERE s.session_type = 'Training'
+      AND DATE(s.session_datetime) BETWEEN @start_date AND @end_date
+    GROUP BY tf.location_id
+),
+GameStats AS (
+    SELECT
+        tf.location_id,
+        COUNT(DISTINCT tf.formation_id) AS num_game_sessions,
+        COUNT(tfa.membership_number)    AS num_game_players
+    FROM TeamFormation tf
+    JOIN Session s ON s.session_id = tf.session_id
+    LEFT JOIN TeamFormationAssignment tfa ON tfa.formation_id = tf.formation_id
+    WHERE s.session_type = 'Game'
+      AND DATE(s.session_datetime) BETWEEN @start_date AND @end_date
+    GROUP BY tf.location_id
+)
+SELECT
+    l.name AS location_name,
+    COALESCE(ts.num_training_sessions, 0) AS num_training_sessions,
+    COALESCE(ts.num_training_players, 0)  AS num_training_players,
+    COALESCE(gs.num_game_sessions, 0)     AS num_game_sessions,
+    COALESCE(gs.num_game_players, 0)      AS num_game_players
+FROM Location l
+LEFT JOIN TrainingStats ts ON ts.location_id = l.location_id
+LEFT JOIN GameStats gs     ON gs.location_id = l.location_id
+WHERE COALESCE(gs.num_game_sessions, 0) >= 4
+ORDER BY num_game_sessions DESC;
+
+
+-- QUERY-13: Active club members never assigned to any team formation
+-- session who have participated in at least one FIFA game.
+USE wqc353_1;
+
+WITH PrevYearPay AS (
+    SELECT membership_number, SUM(amount) AS total_paid
+    FROM Payment
+    WHERE membership_year = YEAR(CURDATE()) - 1
+    GROUP BY membership_number
+),
+ActiveMembers AS (
+    SELECT cm.membership_number
+    FROM ClubMember cm
+    LEFT JOIN PrevYearPay p ON p.membership_number = cm.membership_number
+    WHERE COALESCE(p.total_paid, 0) >=
+          CASE
+              WHEN TIMESTAMPDIFF(
+                       YEAR, cm.date_of_birth,
+                       STR_TO_DATE(CONCAT(YEAR(CURDATE()) - 1, '-12-31'), '%Y-%m-%d')
+                   ) >= 18
+              THEN 200
+              ELSE 100
+          END
+),
+FifaCounts AS (
+    SELECT membership_number, COUNT(*) AS num_fifa_games
+    FROM FIFAParticipation
+    GROUP BY membership_number
+)
+SELECT
+    l.name AS location_name,
+    cm.membership_number,
+    cm.first_name,
+    cm.last_name,
+    TIMESTAMPDIFF(YEAR, cm.date_of_birth, CURDATE()) AS age,
+    cm.phone_number,
+    cm.email,
+    fc.num_fifa_games
+FROM ClubMember cm
+JOIN ActiveMembers am ON am.membership_number = cm.membership_number
+JOIN FifaCounts fc    ON fc.membership_number = cm.membership_number
+JOIN Location l        ON l.location_id = cm.location_id
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM TeamFormationAssignment tfa
+    WHERE tfa.membership_number = cm.membership_number
+)
+ORDER BY location_name ASC, fc.num_fifa_games ASC;
+
+
+-- QUERY-14: Major club members who have been members since they were
+-- minors (registered while still a minor, now 18+).
+USE wqc353_1;
+
+WITH AgeAtReg AS (
+    SELECT
+        membership_number,
+        TIMESTAMPDIFF(YEAR, date_of_birth, registration_date) AS age_at_registration
+    FROM ClubMember
+),
+PrevYearPay AS (
+    SELECT membership_number, SUM(amount) AS total_paid
+    FROM Payment
+    WHERE membership_year = YEAR(CURDATE()) - 1
+    GROUP BY membership_number
+)
+SELECT
+    l.name AS location_name,
+    cm.membership_number,
+    cm.first_name,
+    cm.last_name,
+    CASE WHEN COALESCE(p.total_paid, 0) >= 200 THEN 'Active' ELSE 'Inactive' END AS status,
+    cm.registration_date AS date_joined,
+    TIMESTAMPDIFF(YEAR, cm.date_of_birth, CURDATE()) AS age,
+    cm.phone_number,
+    cm.email
+FROM ClubMember cm
+JOIN AgeAtReg ar        ON ar.membership_number = cm.membership_number
+JOIN Location l          ON l.location_id = cm.location_id
+LEFT JOIN PrevYearPay p ON p.membership_number = cm.membership_number
+WHERE ar.age_at_registration < 18
+  AND TIMESTAMPDIFF(YEAR, cm.date_of_birth, CURDATE()) >= 18
+ORDER BY location_name ASC, age ASC;
+
+
+-- QUERY-15: Active club members who have only ever been assigned the
+-- Goalkeeper role across all team formation sessions.
+USE wqc353_1;
+
+WITH PrevYearPay AS (
+    SELECT membership_number, SUM(amount) AS total_paid
+    FROM Payment
+    WHERE membership_year = YEAR(CURDATE()) - 1
+    GROUP BY membership_number
+),
+ActiveMembers AS (
+    SELECT cm.membership_number
+    FROM ClubMember cm
+    LEFT JOIN PrevYearPay p ON p.membership_number = cm.membership_number
+    WHERE COALESCE(p.total_paid, 0) >=
+          CASE
+              WHEN TIMESTAMPDIFF(
+                       YEAR, cm.date_of_birth,
+                       STR_TO_DATE(CONCAT(YEAR(CURDATE()) - 1, '-12-31'), '%Y-%m-%d')
+                   ) >= 18
+              THEN 200
+              ELSE 100
+          END
+),
+GoalkeeperOnly AS (
+    SELECT membership_number
+    FROM TeamFormationAssignment
+    GROUP BY membership_number
+    HAVING COUNT(*) = SUM(CASE WHEN role = 'Goalkeeper' THEN 1 ELSE 0 END)
+),
+FifaCounts AS (
+    SELECT membership_number, COUNT(*) AS num_fifa_games
+    FROM FIFAParticipation
+    GROUP BY membership_number
+)
+SELECT
+    l.name AS location_name,
+    cm.membership_number,
+    cm.first_name,
+    cm.last_name,
+    TIMESTAMPDIFF(YEAR, cm.date_of_birth, CURDATE()) AS age,
+    cm.phone_number,
+    cm.email,
+    COALESCE(fc.num_fifa_games, 0) AS num_fifa_games
+FROM ClubMember cm
+JOIN ActiveMembers am     ON am.membership_number = cm.membership_number
+JOIN GoalkeeperOnly gk    ON gk.membership_number = cm.membership_number
+JOIN Location l            ON l.location_id = cm.location_id
+LEFT JOIN FifaCounts fc   ON fc.membership_number = cm.membership_number
+ORDER BY location_name ASC, cm.membership_number ASC;
