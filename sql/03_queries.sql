@@ -361,3 +361,108 @@ JOIN (
 WHERE tf.location_id = @loc_id
   AND s.session_datetime BETWEEN @start_date AND @end_date
 ORDER BY s.session_datetime ASC, tf.formation_id, cm.last_name;
+
+
+-- QUERY-18: Active club members who have never won a game session they
+-- were assigned to. A member wins a game if their team's formation score
+-- is strictly higher than the opposing formation's score in the same
+-- session (each session has exactly two team formations).
+USE wqc353_1;
+
+WITH PrevYearPay AS (
+    SELECT membership_number, SUM(amount) AS total_paid
+    FROM Payment
+    WHERE membership_year = YEAR(CURDATE()) - 1
+    GROUP BY membership_number
+),
+ActiveMembers AS (
+    SELECT cm.membership_number
+    FROM ClubMember cm
+    LEFT JOIN PrevYearPay p ON p.membership_number = cm.membership_number
+    WHERE COALESCE(p.total_paid, 0) >=
+          CASE
+              WHEN TIMESTAMPDIFF(
+                       YEAR, cm.date_of_birth,
+                       STR_TO_DATE(CONCAT(YEAR(CURDATE()) - 1, '-12-31'), '%Y-%m-%d')
+                   ) >= 18
+              THEN 200
+              ELSE 100
+          END
+),
+GamePlayers AS (
+    SELECT DISTINCT tfa.membership_number
+    FROM TeamFormationAssignment tfa
+    JOIN TeamFormation tf ON tf.formation_id = tfa.formation_id
+    JOIN Session s ON s.session_id = tf.session_id
+    WHERE s.session_type = 'Game'
+),
+Winners AS (
+    SELECT DISTINCT tfa.membership_number
+    FROM TeamFormationAssignment tfa
+    JOIN TeamFormation tf  ON tf.formation_id = tfa.formation_id
+    JOIN Session s          ON s.session_id = tf.session_id AND s.session_type = 'Game'
+    JOIN TeamFormation opp ON opp.session_id = tf.session_id AND opp.formation_id <> tf.formation_id
+    WHERE tf.score IS NOT NULL
+      AND opp.score IS NOT NULL
+      AND tf.score > opp.score
+)
+SELECT
+    l.name AS location_name,
+    cm.membership_number,
+    cm.first_name,
+    cm.last_name,
+    TIMESTAMPDIFF(YEAR, cm.date_of_birth, CURDATE()) AS age,
+    cm.phone_number,
+    cm.email
+FROM ClubMember cm
+JOIN ActiveMembers am ON am.membership_number = cm.membership_number
+JOIN GamePlayers gp   ON gp.membership_number = cm.membership_number
+JOIN Location l        ON l.location_id = cm.location_id
+WHERE NOT EXISTS (
+    SELECT 1 FROM Winners w WHERE w.membership_number = cm.membership_number
+)
+ORDER BY location_name ASC, cm.membership_number ASC;
+
+
+-- QUERY-19: Volunteer personnel who are family members of at least one
+-- minor club member and have at least one associated club member who
+-- participated in a FIFA game.
+USE wqc353_1;
+
+WITH MinorChildren AS (
+    SELECT r.family_member_id, COUNT(DISTINCT r.membership_number) AS num_minor_members
+    FROM ClubMemberFamilyRelation r
+    JOIN ClubMember cm ON cm.membership_number = r.membership_number
+    WHERE r.end_date IS NULL
+      AND TIMESTAMPDIFF(YEAR, cm.date_of_birth, CURDATE()) < 18
+    GROUP BY r.family_member_id
+),
+FifaChildren AS (
+    SELECT r.family_member_id, COUNT(DISTINCT r.membership_number) AS num_fifa_members
+    FROM ClubMemberFamilyRelation r
+    JOIN FIFAParticipation fp ON fp.membership_number = r.membership_number
+    WHERE r.end_date IS NULL
+    GROUP BY r.family_member_id
+),
+CurrentAssignment AS (
+    SELECT personnel_id, location_id
+    FROM PersonnelAssignment
+    WHERE end_date IS NULL
+)
+SELECT
+    l.name AS location_name,
+    p.first_name,
+    p.last_name,
+    mc.num_minor_members,
+    fc.num_fifa_members,
+    p.phone_number,
+    p.email,
+    p.role AS current_role
+FROM Personnel p
+JOIN FamilyMember fm         ON fm.ssn = p.ssn
+JOIN MinorChildren mc        ON mc.family_member_id = fm.family_member_id
+JOIN FifaChildren fc         ON fc.family_member_id = fm.family_member_id
+JOIN CurrentAssignment ca    ON ca.personnel_id = p.personnel_id
+JOIN Location l               ON l.location_id = ca.location_id
+WHERE p.mandate = 'Volunteer'
+ORDER BY location_name ASC, p.role ASC, p.first_name ASC, p.last_name ASC;
