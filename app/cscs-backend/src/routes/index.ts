@@ -10,6 +10,7 @@ import sessionRoutes from './session.routes';
 import formationRoutes from './formation.routes';
 import fifaRoutes from './fifa.routes';
 import emailRoutes from './email.routes';
+import reportRoutes from './report.routes';
 
 const router = Router();
 
@@ -24,5 +25,6 @@ router.use('/sessions', sessionRoutes);
 router.use('/formations', formationRoutes);
 router.use('/fifa-games', fifaRoutes);
 router.use('/email-logs', emailRoutes);
+router.use('/reports', reportRoutes);
 
 export default router;

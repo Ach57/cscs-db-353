@@ -153,3 +153,14 @@ Follow the `Location` implementation as the reference:
 3. `controllers/<entity>.controller.ts` — thin HTTP glue, no SQL here
 4. `routes/<entity>.routes.ts` — wire validation + controller per verb
 5. One line in `routes/index.ts`: `router.use('/<path>', entityRoutes)`
+
+
+## Evaluation-ready additions
+
+- Location phone CRUD: `GET/POST /api/v1/locations/:id/phones`, `DELETE /api/v1/locations/:id/phones/:phoneNumber`
+- Payment edit: `PUT /api/v1/payments/:id`
+- Financial status: `GET /api/v1/payments/member/:membershipNumber/year/:year` (fee, paid, balance, donation, installments)
+- Weekly email generation/logging: `POST /api/v1/email-logs/generate-weekly` with `{ "from_date": "2026-08-09", "persist": true }`
+- Q8-Q19 report catalog/scaffold: `GET /api/v1/reports`; execute with `GET /api/v1/reports/:id`. Q11 is implemented as a reference and the other complex reports return explicit placeholders ready for SQL.
+
+The API implements CRUD for the core project entities and their association resources. Database-level integrity remains authoritative for the three-hour formation conflict and roster location/gender rules.

@@ -22,3 +22,10 @@ export interface EmailLog {
   subject: string;
   body_snippet: string;
 }
+
+
+export const generateWeeklyEmailsSchema = z.object({
+  from_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  persist: z.boolean().default(true),
+});
+export type GenerateWeeklyEmailsInput = z.infer<typeof generateWeeklyEmailsSchema>;

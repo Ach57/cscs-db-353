@@ -18,3 +18,9 @@ export const create = async (req: Request, res: Response) => {
   const data = await emailService.createEmailLog(input);
   res.status(201).json({ success: true, data });
 };
+
+
+export const generateWeekly = async (req: Request, res: Response) => {
+  const { from_date, persist } = req.validated!.body as { from_date?: string; persist: boolean };
+  res.json({ success: true, data: await emailService.generateWeeklyEmails(from_date, persist) });
+};

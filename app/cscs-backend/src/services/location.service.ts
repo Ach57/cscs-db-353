@@ -1,6 +1,6 @@
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
 import { pool } from '../db/database';
-import { CreateLocationInput, Location, UpdateLocationInput } from '../types/location.types';
+import { CreateLocationInput, Location, LocationPhone, UpdateLocationInput } from '../types/location.types';
 import { NotFoundError, ConflictError } from '../utils/AppError';
 
 interface MysqlError extends Error {
@@ -74,4 +74,36 @@ export async function updateLocation(id: number, input: UpdateLocationInput): Pr
 export async function deleteLocation(id: number): Promise<void> {
   await getLocationById(id); // 404s early if the row doesn't exist
   await pool.query<ResultSetHeader>('DELETE FROM Location WHERE location_id = ?', [id]);
+}
+
+
+export async function getLocationPhones(locationId: number): Promise<LocationPhone[]> {
+  await getLocationById(locationId);
+  const [rows] = await pool.query<(LocationPhone & RowDataPacket)[]>(
+    'SELECT location_id, phone_number FROM LocationPhone WHERE location_id = ? ORDER BY phone_number',
+    [locationId],
+  );
+  return rows;
+}
+
+export async function addLocationPhone(locationId: number, phoneNumber: string): Promise<LocationPhone[]> {
+  await getLocationById(locationId);
+  try {
+    await pool.query<ResultSetHeader>(
+      'INSERT INTO LocationPhone (location_id, phone_number) VALUES (?, ?)',
+      [locationId, phoneNumber],
+    );
+  } catch (err) {
+    if ((err as MysqlError).code === 'ER_DUP_ENTRY') throw new ConflictError('Phone already exists for this location');
+    throw err;
+  }
+  return getLocationPhones(locationId);
+}
+
+export async function removeLocationPhone(locationId: number, phoneNumber: string): Promise<void> {
+  const [result] = await pool.query<ResultSetHeader>(
+    'DELETE FROM LocationPhone WHERE location_id = ? AND phone_number = ?',
+    [locationId, phoneNumber],
+  );
+  if (result.affectedRows === 0) throw new NotFoundError('Location phone', phoneNumber);
 }

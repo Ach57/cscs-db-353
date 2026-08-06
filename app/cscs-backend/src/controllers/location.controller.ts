@@ -34,3 +34,21 @@ export const remove = async (req: Request, res: Response) => {
   await locationService.deleteLocation(id);
   res.status(204).send();
 };
+
+
+export const getPhones = async (req: Request, res: Response) => {
+  const { id } = req.validated!.params as { id: number };
+  res.json({ success: true, data: await locationService.getLocationPhones(id) });
+};
+
+export const addPhone = async (req: Request, res: Response) => {
+  const { id } = req.validated!.params as { id: number };
+  const { phone_number } = req.validated!.body as { phone_number: string };
+  res.status(201).json({ success: true, data: await locationService.addLocationPhone(id, phone_number) });
+};
+
+export const removePhone = async (req: Request, res: Response) => {
+  const { id, phoneNumber } = req.validated!.params as { id: number; phoneNumber: string };
+  await locationService.removeLocationPhone(id, phoneNumber);
+  res.status(204).send();
+};

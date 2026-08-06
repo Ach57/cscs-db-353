@@ -38,3 +38,18 @@ export interface Location {
   web_address: string | null;
   capacity: number;
 }
+
+
+export const locationPhoneParamsSchema = z.object({
+  id: z.coerce.number().int().positive(),
+  phoneNumber: z.string().min(1).max(20),
+});
+
+export const createLocationPhoneSchema = z.object({
+  phone_number: z.string().min(1).max(20),
+});
+
+export interface LocationPhone {
+  location_id: number;
+  phone_number: string;
+}
