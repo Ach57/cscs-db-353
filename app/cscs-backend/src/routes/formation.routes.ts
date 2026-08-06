@@ -13,6 +13,7 @@ import {
 
 const router = Router();
 
+router.get('/', asyncHandler(controller.getAll));
 router.get('/:id', validate(formationIdParamSchema, 'params'), asyncHandler(controller.getOne));
 router.post('/', validate(createFormationSchema), asyncHandler(controller.create));
 router.put(

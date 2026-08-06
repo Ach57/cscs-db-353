@@ -40,6 +40,47 @@ async function fetchFormationWithAssignments(
   };
 }
 
+export async function getAllFormations(): Promise<TeamFormationWithAssignments[]> {
+  const [formations] = await pool.query<RowDataPacket[]>(
+    `SELECT tf.*, s.session_datetime, s.session_type, s.address AS session_address,
+            l.name AS location_name,
+            p.first_name AS coach_first_name, p.last_name AS coach_last_name,
+            COUNT(tfa.membership_number) AS player_count
+       FROM TeamFormation tf
+       JOIN Session s ON s.session_id = tf.session_id
+       JOIN Location l ON l.location_id = tf.location_id
+       JOIN Personnel p ON p.personnel_id = tf.head_coach_id
+       LEFT JOIN TeamFormationAssignment tfa ON tfa.formation_id = tf.formation_id
+      GROUP BY tf.formation_id, s.session_datetime, s.session_type, s.address,
+               l.name, p.first_name, p.last_name
+      ORDER BY s.session_datetime ASC, tf.team_name ASC`,
+  );
+
+  if (!formations.length) return [];
+
+  const ids = formations.map((row) => row.formation_id as number);
+  const placeholders = ids.map(() => '?').join(',');
+  const [assignments] = await pool.query<RowDataPacket[]>(
+    `SELECT tfa.*, cm.first_name, cm.last_name
+       FROM TeamFormationAssignment tfa
+       JOIN ClubMember cm ON cm.membership_number = tfa.membership_number
+      WHERE tfa.formation_id IN (${placeholders})
+      ORDER BY tfa.formation_id, tfa.role, cm.last_name, cm.first_name`,
+    ids,
+  );
+
+  const byFormation = new Map<number, RowDataPacket[]>();
+  for (const assignment of assignments) {
+    const formationId = assignment.formation_id as number;
+    byFormation.set(formationId, [...(byFormation.get(formationId) ?? []), assignment]);
+  }
+
+  return formations.map((formation) => ({
+    ...(formation as TeamFormationWithAssignments),
+    assignments: (byFormation.get(formation.formation_id as number) ?? []) as TeamFormationWithAssignments['assignments'],
+  }));
+}
+
 export async function getFormationById(formationId: number): Promise<TeamFormationWithAssignments> {
   return fetchFormationWithAssignments(formationId);
 }
