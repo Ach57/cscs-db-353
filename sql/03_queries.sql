@@ -234,6 +234,39 @@ JOIN FIFAParticipation fp ON fp.membership_number = cm.membership_number
 GROUP BY cm.membership_number, member_name
 HAVING COUNT(fp.game_id) >= 4;
 
+-- QUERY-9: Primary family members with ≥2 FIFA-participating
+USE wqc353_1;
+
+WITH ActiveRelations AS (
+    SELECT r.family_member_id, r.membership_number, r.relationship_type
+    FROM ClubMemberFamilyRelation r
+    WHERE r.end_date IS NULL
+),
+FifaChildren AS (
+    SELECT DISTINCT ar.family_member_id, ar.membership_number
+    FROM ActiveRelations ar
+    JOIN FIFAParticipation fp ON fp.membership_number = ar.membership_number
+),
+QualifyingFamilies AS (
+    SELECT family_member_id
+    FROM FifaChildren
+    GROUP BY family_member_id
+    HAVING COUNT(DISTINCT membership_number) >= 2
+)
+SELECT
+    fm.first_name AS family_first_name,
+    fm.last_name AS family_last_name,
+    cm.membership_number,
+    cm.first_name AS child_first_name,
+    cm.last_name AS child_last_name,
+    cm.date_of_birth AS child_dob,
+    ar.relationship_type
+FROM QualifyingFamilies qf
+JOIN FamilyMember fm ON fm.family_member_id = qf.family_member_id
+JOIN FifaChildren fc ON fc.family_member_id = qf.family_member_id
+JOIN ActiveRelations ar ON ar.family_member_id = fc.family_member_id AND ar.membership_number = fc.membership_number
+JOIN ClubMember cm ON cm.membership_number = fc.membership_number
+ORDER BY fm.first_name ASC, fm.last_name ASC, cm.membership_number ASC;
 -- QUERY-8: Locations with ≥2 FIFA participants
 USE wqc353_1;
 
