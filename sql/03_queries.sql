@@ -361,3 +361,38 @@ JOIN (
 WHERE tf.location_id = @loc_id
   AND s.session_datetime BETWEEN @start_date AND @end_date
 ORDER BY s.session_datetime ASC, tf.formation_id, cm.last_name;
+
+
+--QUERY 17: Family members who are also head coaches at their location
+SET @location_id = 1;  -- parameter: the given location
+
+WITH PrevYearPay AS (
+    SELECT membership_number, SUM(amount) AS total_paid
+    FROM Payment
+    WHERE membership_year = YEAR(CURDATE()) - 1
+    GROUP BY membership_number
+),
+ActiveMembersHere AS (
+    SELECT cm.membership_number
+    FROM ClubMember cm
+    LEFT JOIN PrevYearPay p ON p.membership_number = cm.membership_number
+    WHERE cm.location_id = @location_id
+      AND COALESCE(p.total_paid, 0) >=
+          CASE WHEN TIMESTAMPDIFF(YEAR, cm.date_of_birth, CURDATE()) >= 18
+               THEN 200 ELSE 100 END
+),
+HeadCoachesHere AS (
+    SELECT DISTINCT tf.head_coach_id
+    FROM TeamFormation tf
+    WHERE tf.location_id = @location_id
+)
+SELECT DISTINCT
+    fm.first_name,
+    fm.last_name,
+    fm.phone_number
+FROM FamilyMember fm
+JOIN Personnel per            ON per.ssn = fm.ssn
+JOIN HeadCoachesHere hc       ON hc.head_coach_id = per.personnel_id
+JOIN ClubMemberFamilyRelation r ON r.family_member_id = fm.family_member_id
+                                 AND r.end_date IS NULL
+JOIN ActiveMembersHere am      ON am.membership_number = r.membership_number;
