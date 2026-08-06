@@ -106,3 +106,13 @@ export interface TeamFormationWithAssignments extends TeamFormation {
 export interface SessionWithFormations extends Session {
   formations: TeamFormation[];
 }
+
+export interface MemberAssignmentOverview {
+  membership_number: number;
+  first_name: string;
+  last_name: string;
+  location_id: number;
+  location_name: string;
+  assignment_count: number;
+  assigned_teams: string | null;
+}

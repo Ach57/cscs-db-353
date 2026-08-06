@@ -7,6 +7,12 @@ import {
   UpdateFormationMemberInput,
 } from '../types/session.types';
 
+
+export const getMemberAssignments = async (_req: Request, res: Response) => {
+  const data = await formationService.getMemberAssignmentOverview();
+  res.json({ success: true, data });
+};
+
 export const getAll = async (_req: Request, res: Response) => {
   const data = await formationService.getAllFormations();
   res.json({ success: true, data });

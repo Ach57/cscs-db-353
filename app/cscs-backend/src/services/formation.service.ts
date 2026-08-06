@@ -6,6 +6,7 @@ import {
   UpdateFormationInput,
   AddFormationMemberInput,
   UpdateFormationMemberInput,
+  MemberAssignmentOverview,
 } from '../types/session.types';
 import { NotFoundError, ConflictError } from '../utils/AppError';
 
@@ -38,6 +39,38 @@ async function fetchFormationWithAssignments(
     ...(formations[0] as TeamFormationWithAssignments),
     assignments: assignments as TeamFormationWithAssignments['assignments'],
   };
+}
+
+
+export async function getMemberAssignmentOverview(): Promise<MemberAssignmentOverview[]> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT cm.membership_number,
+            cm.first_name,
+            cm.last_name,
+            cm.location_id,
+            l.name AS location_name,
+            COUNT(tfa.formation_id) AS assignment_count,
+            GROUP_CONCAT(
+              DISTINCT CONCAT(
+                tf.team_name,
+                ' (#', tf.formation_id, ')',
+                ' · ', DATE_FORMAT(s.session_datetime, '%Y-%m-%d %H:%i'),
+                ' · ', tfa.role
+              )
+              ORDER BY s.session_datetime, tf.team_name
+              SEPARATOR ' | '
+            ) AS assigned_teams
+       FROM ClubMember cm
+       JOIN Location l ON l.location_id = cm.location_id
+       LEFT JOIN TeamFormationAssignment tfa
+         ON tfa.membership_number = cm.membership_number
+       LEFT JOIN TeamFormation tf ON tf.formation_id = tfa.formation_id
+       LEFT JOIN Session s ON s.session_id = tf.session_id
+      GROUP BY cm.membership_number, cm.first_name, cm.last_name, cm.location_id, l.name
+      ORDER BY cm.membership_number ASC`,
+  );
+
+  return rows as MemberAssignmentOverview[];
 }
 
 export async function getAllFormations(): Promise<TeamFormationWithAssignments[]> {

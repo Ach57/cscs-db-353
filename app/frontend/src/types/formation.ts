@@ -7,3 +7,5 @@ export type SessionInput = Omit<Session,"session_id">;
 export interface TeamFormation { formation_id:number; session_id:number; location_id:number; head_coach_id:number; team_name:string; score:number|null; team_category:TeamCategory; session_datetime?:string; session_type?:SessionNature; session_address?:string; location_name?:string; coach_first_name?:string; coach_last_name?:string; player_count?:number; assignments?:FormationPlayer[]; }
 export type TeamFormationInput=Omit<TeamFormation,"formation_id">;
 export interface FormationPlayer { formation_id:number; membership_number:number; role:PlayerRole; first_name?:string; last_name?:string; }
+
+export interface MemberAssignmentOverview { membership_number:number; first_name:string; last_name:string; location_id:number; location_name:string; assignment_count:number; assigned_teams:string|null; }
