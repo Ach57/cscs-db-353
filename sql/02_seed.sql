@@ -372,6 +372,8 @@ VALUES
  'Training session scheduled for August 10 at 6:30 PM.'),
 ('2026-08-08', 6, 11, 'Game Reminder',
  'Your team plays on August 15 at 2 PM.'),
+('2026-08-08', 10, 11, 'Game Reminder',
+ 'Your team plays on August 15 at 2 PM.');
 
 -- Additional relations to create qualifying cases for QUERY-9
 -- (family members with >=2 children who each played at least one FIFA game)
@@ -379,8 +381,6 @@ INSERT INTO ClubMemberFamilyRelation (relation_id, membership_number, family_mem
 (13, 2, 1, 'Mother', '2021-09-05', NULL),  
 (14, 4, 2, 'Father', '2020-02-20', NULL),  
 (15, 6, 3, 'Mother', '2021-11-01', NULL);  
-('2026-08-08', 10, 11, 'Game Reminder',
- 'Your team plays on August 15 at 2 PM.');
 
 -- Additional FIFA games + participations to create qualifying cases for QUERY-11
 INSERT INTO FIFAGame (game_id, location_id, team_name, opponent_name, game_date, team_score, opponent_score) VALUES
