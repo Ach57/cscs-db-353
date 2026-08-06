@@ -327,3 +327,37 @@ LEFT JOIN GM gm ON gm.location_id = l.location_id
 LEFT JOIN MemberCounts mc ON mc.location_id = l.location_id
 WHERE fc.num_fifa_participants >= 2
 ORDER BY fc.num_fifa_participants DESC;
+
+
+--QUERY 10: Team formations for a location and date
+USE wqc353_1;
+
+SET @loc_id = 1;
+SET @start_date = '2026-01-01';
+SET @end_date = '2026-12-31';
+
+SELECT
+    p.first_name AS head_coach_first_name,
+    p.last_name AS head_coach_last_name,
+    s.session_datetime AS start_time,
+    s.address,
+    s.session_type,
+    tf.team_name,
+    tf.score,
+    tp.total_players,
+    cm.first_name AS player_first_name,
+    cm.last_name AS player_last_name,
+    tfa.role
+FROM TeamFormation tf
+JOIN Session s ON s.session_id = tf.session_id
+JOIN Personnel p ON p.personnel_id = tf.head_coach_id
+JOIN TeamFormationAssignment tfa ON tfa.formation_id = tf.formation_id
+JOIN ClubMember cm ON cm.membership_number = tfa.membership_number
+JOIN (
+    SELECT formation_id, COUNT(*) AS total_players
+    FROM TeamFormationAssignment
+    GROUP BY formation_id
+) tp ON tp.formation_id = tf.formation_id
+WHERE tf.location_id = @loc_id
+  AND s.session_datetime BETWEEN @start_date AND @end_date
+ORDER BY s.session_datetime ASC, tf.formation_id, cm.last_name;
