@@ -361,3 +361,41 @@ JOIN (
 WHERE tf.location_id = @loc_id
   AND s.session_datetime BETWEEN @start_date AND @end_date
 ORDER BY s.session_datetime ASC, tf.formation_id, cm.last_name;
+
+
+-- Query (16): Active club members assigned at least once each to
+WITH RequiredRoles AS (
+    SELECT tfa.membership_number
+    FROM TeamFormationAssignment tfa
+    WHERE tfa.role IN (
+        'Goalkeeper',
+        'Right Fullback',
+        'Center Back or Sweeper',
+        'Defending or Holding Midfielder',
+        'Striker'
+    )
+    GROUP BY tfa.membership_number
+    HAVING COUNT(DISTINCT tfa.role) = 5
+),
+PrevYearPay AS (
+    SELECT membership_number, SUM(amount) AS total_paid
+    FROM Payment
+    WHERE membership_year = YEAR(CURDATE()) - 1
+    GROUP BY membership_number
+)
+SELECT
+    cm.membership_number,
+    cm.first_name,
+    cm.last_name,
+    TIMESTAMPDIFF(YEAR, cm.date_of_birth, CURDATE()) AS age,
+    cm.phone_number,
+    cm.email,
+    l.name AS location_name
+FROM ClubMember cm
+JOIN RequiredRoles rr ON rr.membership_number = cm.membership_number
+JOIN Location l ON l.location_id = cm.location_id
+LEFT JOIN PrevYearPay p ON p.membership_number = cm.membership_number
+WHERE COALESCE(p.total_paid, 0) >=
+    CASE WHEN TIMESTAMPDIFF(YEAR, cm.date_of_birth, CURDATE()) >= 18
+         THEN 200 ELSE 100 END
+ORDER BY l.name ASC, cm.membership_number ASC;
