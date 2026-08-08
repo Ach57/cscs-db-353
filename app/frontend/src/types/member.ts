@@ -23,7 +23,7 @@ export interface ClubMember {
     first_name:string; 
     last_name:string; 
     date_of_birth:string; 
-    gender:"Boys"|"Girls";
+    gender:"Male"|"Female";
     registration_date:string; 
     height_cm:number|null; 
     weight_kg:number|null; 
