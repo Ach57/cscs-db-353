@@ -392,3 +392,208 @@ INSERT INTO FIFAParticipation (game_id, membership_number) VALUES
 (11, 1), (11, 2), (11, 7),      -- Thomas, Sophie, Gabriel each +1
 (12, 3), (12, 4), (12, 8),      -- Maxime, Camille, Emma each +1
 (13, 1), (13, 7);               -- Thomas, Gabriel each +1 again
+
+-- ADDITION for QUERY-8: ensure locations 4 and 5 each have >=2 FIFA participants
+INSERT INTO ClubMember (membership_number, location_id, first_name, last_name, date_of_birth, gender, registration_date, height_cm, weight_kg, ssn, medicare_number, phone_number, address, city, province, postal_code, email) VALUES
+(11, 4, 'Julien', 'Beauchamp', '2005-02-11', 'Male', '2023-09-01', 172.00, 63.00, 'M100000011', 'BEAU05021199', '514-555-3011', '10 Rue Prince-Arthur', 'Saint-Laurent', 'QC', 'H4M2M3', 'julien.beauchamp@email.com'),
+(12, 4, 'Amelie', 'Rousseau', '2009-07-19', 'Female', '2023-09-01', 150.00, 44.00, 'M100000012', 'ROUS09071999', '514-555-3012', '20 Rue Grenet', 'Saint-Laurent', 'QC', 'H4M2M4', 'amelie.rousseau@email.com'),
+(13, 5, 'Olivier', 'Fournier', '2004-12-03', 'Male', '2023-10-01', 175.00, 68.00, 'M100000013', 'FOUR04120399', '450-555-3013', '5 Rue Taschereau', 'Brossard', 'QC', 'J4Y1A2', 'olivier.fournier@email.com'),
+(14, 5, 'Chloe', 'Marceau', '2010-04-27', 'Female', '2023-10-01', 148.00, 42.00, 'M100000014', 'MARC10042799', '450-555-3014', '15 Rue Taschereau', 'Brossard', 'QC', 'J4Y1A3', 'chloe.marceau@email.com');
+
+INSERT INTO FIFAParticipation (game_id, membership_number) VALUES
+(5, 11), (5, 12),
+(6, 13), (6, 14);
+
+-- ADDITION for QUERY-11: give Maxime and Camille a 5th FIFA game each
+INSERT INTO FIFAParticipation (game_id, membership_number) VALUES
+(3, 3),
+(3, 4);
+
+-- ADDITION for QUERY-12: seed Game-type sessions in Jan-May 2025 for 5 locations
+INSERT INTO Session (session_datetime, address, session_type) VALUES
+('2025-01-10 15:00:00', '789 Sports Road', 'Game'),
+('2025-01-25 15:00:00', '789 Sports Road', 'Game'),
+('2025-02-08 15:00:00', '789 Sports Road', 'Game'),
+('2025-02-22 15:00:00', '789 Sports Road', 'Game'),
+('2025-01-12 15:00:00', '456 Park Avenue', 'Game'),
+('2025-01-27 15:00:00', '456 Park Avenue', 'Game'),
+('2025-02-10 15:00:00', '456 Park Avenue', 'Game'),
+('2025-02-24 15:00:00', '456 Park Avenue', 'Game'),
+('2025-03-01 15:00:00', '123 Main Street', 'Game'),
+('2025-03-15 15:00:00', '123 Main Street', 'Game'),
+('2025-03-29 15:00:00', '123 Main Street', 'Game'),
+('2025-04-05 15:00:00', '123 Main Street', 'Game'),
+('2025-03-03 15:00:00', '200 Boulevard Laurentien', 'Game'),
+('2025-03-17 15:00:00', '200 Boulevard Laurentien', 'Game'),
+('2025-04-01 15:00:00', '200 Boulevard Laurentien', 'Game'),
+('2025-04-15 15:00:00', '200 Boulevard Laurentien', 'Game'),
+('2025-04-08 15:00:00', '300 Rue Taschereau', 'Game'),
+('2025-04-22 15:00:00', '300 Rue Taschereau', 'Game'),
+('2025-05-06 15:00:00', '300 Rue Taschereau', 'Game'),
+('2025-05-20 15:00:00', '300 Rue Taschereau', 'Game');
+
+-- New TeamFormation rows tied to those sessions (session_id 11-30, following on from existing 1-10)
+INSERT INTO TeamFormation (session_id, location_id, head_coach_id, team_name, score, team_category) VALUES
+(11, 1, 3, 'Red Lions', 2, 'Boys'), (12, 1, 3, 'Red Lions', 1, 'Boys'), (13, 1, 3, 'Red Lions', 3, 'Boys'), (14, 1, 3, 'Red Lions', 0, 'Boys'),
+(15, 2, 9, 'Green Wolves', 1, 'Boys'), (16, 2, 9, 'Green Wolves', 2, 'Boys'), (17, 2, 9, 'Green Wolves', 0, 'Boys'), (18, 2, 9, 'Green Wolves', 3, 'Boys'),
+(19, 3, 9, 'Blue Hawks', 2, 'Boys'), (20, 3, 9, 'Blue Hawks', 1, 'Boys'), (21, 3, 9, 'Blue Hawks', 4, 'Boys'), (22, 3, 9, 'Blue Hawks', 0, 'Boys'),
+(23, 4, 7, 'North Falcons', 1, 'Boys'), (24, 4, 7, 'North Falcons', 2, 'Boys'), (25, 4, 7, 'North Falcons', 3, 'Boys'), (26, 4, 7, 'North Falcons', 1, 'Boys'),
+(27, 5, 8, 'South Panthers', 2, 'Boys'), (28, 5, 8, 'South Panthers', 0, 'Boys'), (29, 5, 8, 'South Panthers', 1, 'Boys'), (30, 5, 8, 'South Panthers', 3, 'Boys');
+
+
+-- ADDITION for QUERY-13: active members who played FIFA but were never assigned to a team formation
+INSERT INTO ClubMember (membership_number, location_id, first_name, last_name, date_of_birth, gender, registration_date, height_cm, weight_kg, ssn, medicare_number, phone_number, address, city, province, postal_code, email) VALUES
+(15, 1, 'Nathan', 'Cote', '2011-03-15', 'Male', '2023-01-10', 145.00, 38.00, 'M100000015', 'COTE11031599', '514-555-3015', '30 Rue Ontario', 'Montreal', 'QC', 'H2K1K2', 'nathan.cote@email.com'),
+(16, 2, 'Zoe', 'Perreault', '2010-06-22', 'Female', '2023-01-10', 152.00, 43.00, 'M100000016', 'PERR10062299', '450-555-3016', '35 Rue Lévis', 'Laval', 'QC', 'H7G7G8', 'zoe.perreault@email.com'),
+(17, 3, 'Eliot', 'Simard', '2009-09-05', 'Male', '2023-01-10', 160.00, 50.00, 'M100000017', 'SIMA09090599', '450-555-3017', '40 Rue Fournier', 'Longueuil', 'QC', 'J4H8H9', 'eliot.simard@email.com'),
+(18, 4, 'Ines', 'Boucher', '2012-01-18', 'Female', '2023-01-10', 140.00, 35.00, 'M100000018', 'BOUC12011899', '450-555-3018', '25 Boulevard Laurentien', 'Saint-Laurent', 'QC', 'H4M2M5', 'ines.boucher@email.com'),
+(19, 5, 'Felix', 'Cormier', '2008-11-30', 'Male', '2023-01-10', 165.00, 55.00, 'M100000019', 'CORM08113099', '450-555-3019', '35 Rue Taschereau', 'Brossard', 'QC', 'J4Y1A4', 'felix.cormier@email.com');
+
+INSERT INTO Payment (payment_id, membership_number, payment_date, amount, payment_method, membership_year, installment_number) VALUES
+(19, 15, '2025-03-01', 100.00, 'Debit', 2025, 1),
+(20, 16, '2025-03-01', 100.00, 'Debit', 2025, 1),
+(21, 17, '2025-03-01', 100.00, 'Debit', 2025, 1),
+(22, 18, '2025-03-01', 100.00, 'Debit', 2025, 1),
+(23, 19, '2025-03-01', 100.00, 'Debit', 2025, 1);
+
+INSERT INTO FIFAParticipation (game_id, membership_number) VALUES
+(1, 15),
+(2, 16),
+(3, 17),
+(5, 18),
+(6, 19);
+
+
+-- ADDITION for QUERY-14: one more member who registered as a minor and is now an adult
+INSERT INTO ClubMember (membership_number, location_id, first_name, last_name, date_of_birth, gender, registration_date, height_cm, weight_kg, ssn, medicare_number, phone_number, address, city, province, postal_code, email) VALUES
+(20, 3, 'Xavier', 'Beaulieu', '2006-05-10', 'Male', '2021-03-15', 178.00, 70.00, 'M100000020', 'BEAU06051099', '450-555-3020', '60 Rue Fournier', 'Longueuil', 'QC', 'J4H8H0', 'xavier.beaulieu@email.com');
+
+
+-- ADDITION for QUERY-15: active members who only ever played Goalkeeper
+INSERT INTO ClubMember (membership_number, location_id, first_name, last_name, date_of_birth, gender, registration_date, height_cm, weight_kg, ssn, medicare_number, phone_number, address, city, province, postal_code, email) VALUES
+(21, 1, 'Marc', 'Bissonnette', '2000-01-01', 'Male', '2022-01-01', 180.00, 75.00, 'M100000021', 'BISS00010199', '514-555-3021', '70 Rue Ontario', 'Montreal', 'QC', 'H2K1K3', 'marc.bissonnette@email.com'),
+(22, 2, 'Julie', 'Racine', '1999-05-05', 'Female', '2022-01-01', 165.00, 58.00, 'M100000022', 'RACI99050599', '450-555-3022', '45 Rue Lévis', 'Laval', 'QC', 'H7G7G9', 'julie.racine@email.com'),
+(23, 2, 'Noah', 'St-Pierre', '2010-01-01', 'Male', '2022-01-01', 150.00, 45.00, 'M100000023', 'STPI10010199', '450-555-3023', '50 Rue Lévis', 'Laval', 'QC', 'H7G7H0', 'noah.stpierre@email.com'),
+(24, 3, 'Emile', 'Doucet', '2011-01-01', 'Male', '2022-01-01', 148.00, 42.00, 'M100000024', 'DOUC11010199', '450-555-3024', '45 Rue Fournier', 'Longueuil', 'QC', 'J4H8H1', 'emile.doucet@email.com'),
+(25, 2, 'Vincent', 'Aubin', '1998-03-03', 'Male', '2022-01-01', 182.00, 78.00, 'M100000025', 'AUBI98030399', '450-555-3025', '55 Rue Lévis', 'Laval', 'QC', 'H7G7H1', 'vincent.aubin@email.com');
+
+INSERT INTO Payment (payment_id, membership_number, payment_date, amount, payment_method, membership_year, installment_number) VALUES
+(24, 21, '2025-04-01', 200.00, 'Debit', 2025, 1),
+(25, 22, '2025-04-01', 200.00, 'Debit', 2025, 1),
+(26, 23, '2025-04-01', 100.00, 'Debit', 2025, 1),
+(27, 24, '2025-04-01', 100.00, 'Debit', 2025, 1),
+(28, 25, '2025-04-01', 200.00, 'Debit', 2025, 1);
+
+INSERT INTO TeamFormationAssignment (formation_id, membership_number, role) VALUES
+(1, 21, 'Goalkeeper'),
+(2, 22, 'Goalkeeper'),
+(3, 23, 'Goalkeeper'),
+(4, 24, 'Goalkeeper'),
+(7, 25, 'Goalkeeper');
+
+
+-- ADDITION for QUERY-16: members who played all 5 required roles and are Active
+INSERT INTO ClubMember (membership_number, location_id, first_name, last_name, date_of_birth, gender, registration_date, height_cm, weight_kg, ssn, medicare_number, phone_number, address, city, province, postal_code, email) VALUES
+(26, 1, 'Adam', 'Belisle', '1996-02-14', 'Male', '2022-01-01', 180.00, 76.00, 'M100000026', 'BELI96021499', '514-555-3026', '80 Rue Ontario', 'Montreal', 'QC', 'H2K1K4', 'adam.belisle@email.com'),
+(27, 1, 'Rosalie', 'Chartrand', '1997-06-20', 'Female', '2022-01-01', 168.00, 60.00, 'M100000027', 'CHAR97062099', '514-555-3027', '90 Rue Ontario', 'Montreal', 'QC', 'H2K1K5', 'rosalie.chartrand@email.com'),
+(28, 2, 'Etienne', 'Larose', '1995-09-09', 'Male', '2022-01-01', 177.00, 74.00, 'M100000028', 'LARO95090999', '450-555-3028', '60 Rue Lévis', 'Laval', 'QC', 'H7G7H2', 'etienne.larose@email.com'),
+(29, 2, 'Florence', 'Michaud', '1998-11-11', 'Female', '2022-01-01', 165.00, 57.00, 'M100000029', 'MICH98111199', '450-555-3029', '65 Rue Lévis', 'Laval', 'QC', 'H7G7H3', 'florence.michaud@email.com'),
+(30, 3, 'Thierry', 'Nadeau', '1994-04-04', 'Male', '2022-01-01', 183.00, 80.00, 'M100000030', 'NADE94040499', '450-555-3030', '50 Rue Fournier', 'Longueuil', 'QC', 'J4H8H2', 'thierry.nadeau@email.com');
+
+INSERT INTO Payment (payment_id, membership_number, payment_date, amount, payment_method, membership_year, installment_number) VALUES
+(29, 26, '2025-04-01', 200.00, 'Debit', 2025, 1),
+(30, 27, '2025-04-01', 200.00, 'Debit', 2025, 1),
+(31, 28, '2025-04-01', 200.00, 'Debit', 2025, 1),
+(32, 29, '2025-04-01', 200.00, 'Debit', 2025, 1),
+(33, 30, '2025-04-01', 200.00, 'Debit', 2025, 1);
+
+INSERT INTO TeamFormationAssignment (formation_id, membership_number, role) VALUES
+(1, 26, 'Goalkeeper'), (2, 26, 'Right Fullback'), (3, 26, 'Center Back or Sweeper'), (4, 26, 'Defending or Holding Midfielder'), (5, 26, 'Striker'),
+(6, 27, 'Goalkeeper'), (7, 27, 'Right Fullback'), (8, 27, 'Center Back or Sweeper'), (9, 27, 'Defending or Holding Midfielder'), (10, 27, 'Striker'),
+(11, 28, 'Goalkeeper'), (12, 28, 'Right Fullback'), (13, 28, 'Center Back or Sweeper'), (14, 28, 'Defending or Holding Midfielder'), (15, 28, 'Striker'),
+(16, 29, 'Goalkeeper'), (17, 29, 'Right Fullback'), (18, 29, 'Center Back or Sweeper'), (19, 29, 'Defending or Holding Midfielder'), (20, 29, 'Striker'),
+(21, 30, 'Goalkeeper'), (22, 30, 'Right Fullback'), (23, 30, 'Center Back or Sweeper'), (24, 30, 'Defending or Holding Midfielder'), (25, 30, 'Striker');
+
+
+-- ADDITION for QUERY-17: family members who are also head coaches at location 1, linked to Active members
+INSERT INTO Personnel (personnel_id, first_name, last_name, date_of_birth, ssn, medicare_number, phone_number, address, city, province, postal_code, email, role, mandate) VALUES
+(11, 'Paul', 'Vezina', '1980-01-01', 'HC0000011', 'VEZI80010199', '514-555-4011', '1 Rue Coach', 'Montreal', 'QC', 'H2X1K5', 'paul.vezina@cscs.ca', 'Coach', 'Volunteer'),
+(12, 'Sarah', 'Cusson', '1981-02-02', 'HC0000012', 'CUSS81020299', '514-555-4012', '2 Rue Coach', 'Montreal', 'QC', 'H2X1K6', 'sarah.cusson@cscs.ca', 'Coach', 'Volunteer'),
+(13, 'Karim', 'Haddad', '1982-03-03', 'HC0000013', 'HADD82030399', '514-555-4013', '3 Rue Coach', 'Montreal', 'QC', 'H2X1K7', 'karim.haddad@cscs.ca', 'Coach', 'Volunteer');
+
+INSERT INTO TeamFormation (session_id, location_id, head_coach_id, team_name, score, team_category) VALUES
+(1, 1, 11, 'Crimson Hawks', NULL, 'Boys'),
+(2, 1, 12, 'Azure Tigers', NULL, 'Boys'),
+(3, 1, 13, 'Golden Rams', NULL, 'Boys');
+
+INSERT INTO FamilyMember (family_member_id, first_name, last_name, date_of_birth, ssn, medicare_number, phone_number, address, city, province, postal_code, email) VALUES
+(13, 'Simon', 'Roy2', '1990-11-23', '333-333-333', 'ROYS90112400', '450-555-4013', '56 Rue des Érables', 'Laval', 'QC', 'H7C3C4', 'simonroy2@email.com'),
+(14, 'Marie-Eve', 'Ouellet2', '1993-12-11', '604-111-111', 'OUEL93121100', '450-555-4014', '88 Rue des Saules', 'Terrebonne', 'QC', 'J6W2W3', 'marieeve2@email.com'),
+(15, 'Paul', 'Vezina', '1980-01-01', 'HC0000011', 'VEZI80010100', '514-555-4015', '1 Rue Coach', 'Montreal', 'QC', 'H2X1K5', 'paul.vezina@email.com'),
+(16, 'Sarah', 'Cusson', '1981-02-02', 'HC0000012', 'CUSS81020200', '514-555-4016', '2 Rue Coach', 'Montreal', 'QC', 'H2X1K6', 'sarah.cusson@email.com'),
+(17, 'Karim', 'Haddad', '1982-03-03', 'HC0000013', 'HADD82030300', '514-555-4017', '3 Rue Coach', 'Montreal', 'QC', 'H2X1K7', 'karim.haddad@email.com');
+
+INSERT INTO ClubMemberFamilyRelation (relation_id, membership_number, family_member_id, relationship_type, family_member_type, start_date, end_date) VALUES
+(16, 9, 13, 'Father', 'Secondary', '2023-05-10', NULL),
+(17, 15, 14, 'Mother', 'Secondary', '2023-01-10', NULL),
+(18, 21, 15, 'Father', 'Secondary', '2022-01-01', NULL),
+(19, 26, 16, 'Mother', 'Secondary', '2022-01-01', NULL),
+(20, 27, 17, 'Father', 'Secondary', '2022-01-01', NULL);
+
+
+-- ADDITION for QUERY-18: 2 more active members who played a Game but never won
+INSERT INTO ClubMember (membership_number, location_id, first_name, last_name, date_of_birth, gender, registration_date, height_cm, weight_kg, ssn, medicare_number, phone_number, address, city, province, postal_code, email) VALUES
+(31, 5, 'Mathis', 'Perron', '2005-06-15', 'Male', '2022-01-01', 174.00, 66.00, 'M100000031', 'PERR05061599', '450-555-3031', '10 Rue Taschereau', 'Brossard', 'QC', 'J4Y1A5', 'mathis.perron@email.com'),
+(32, 5, 'Laurence', 'Gagne', '2004-08-22', 'Female', '2022-01-01', 163.00, 55.00, 'M100000032', 'GAGN04082299', '450-555-3032', '15 Rue Taschereau', 'Brossard', 'QC', 'J4Y1A6', 'laurence.gagne@email.com');
+
+INSERT INTO Payment (payment_id, membership_number, payment_date, amount, payment_method, membership_year, installment_number) VALUES
+(34, 31, '2025-04-01', 200.00, 'Debit', 2025, 1),
+(35, 32, '2025-04-01', 200.00, 'Debit', 2025, 1);
+
+INSERT INTO TeamFormationAssignment (formation_id, membership_number, role) VALUES
+(28, 31, 'Striker'),
+(29, 32, 'Center Back or Sweeper');
+
+
+-- ADDITION for QUERY-19: volunteer personnel whose family member has minor FIFA-playing children
+INSERT INTO Personnel (personnel_id, first_name, last_name, date_of_birth, ssn, medicare_number, phone_number, address, city, province, postal_code, email, role, mandate) VALUES
+(14, 'Renee', 'Lacasse', '1975-01-01', 'VC0000014', 'LACA75010199', '514-555-4014', '10 Rue Volunteer', 'Montreal', 'QC', 'H2X1K8', 'renee.lacasse@cscs.ca', 'Coach', 'Volunteer'),
+(15, 'Bruno', 'Frechette', '1976-02-02', 'VC0000015', 'FREC76020299', '514-555-4015', '11 Rue Volunteer', 'Montreal', 'QC', 'H2X1K9', 'bruno.frechette@cscs.ca', 'Coach', 'Volunteer'),
+(16, 'Celine', 'Marquis', '1977-03-03', 'VC0000016', 'MARQ77030399', '450-555-4016', '12 Rue Volunteer', 'Laval', 'QC', 'H7P2P3', 'celine.marquis@cscs.ca', 'Coach', 'Volunteer'),
+(17, 'Denis', 'Sirois', '1978-04-04', 'VC0000017', 'SIRO78040499', '450-555-4017', '13 Rue Volunteer', 'Longueuil', 'QC', 'J4H1E6', 'denis.sirois@cscs.ca', 'Coach', 'Volunteer'),
+(18, 'Ginette', 'Lefebvre', '1979-05-05', 'VC0000018', 'LEFE79050599', '450-555-4018', '14 Rue Volunteer', 'Brossard', 'QC', 'J4Y1A7', 'ginette.lefebvre@cscs.ca', 'Coach', 'Volunteer');
+
+INSERT INTO PersonnelAssignment (assignment_id, personnel_id, location_id, start_date, end_date) VALUES
+(11, 14, 1, '2022-01-01', NULL),
+(12, 15, 1, '2022-01-01', NULL),
+(13, 16, 2, '2022-01-01', NULL),
+(14, 17, 3, '2022-01-01', NULL),
+(15, 18, 5, '2022-01-01', NULL);
+
+INSERT INTO FamilyMember (family_member_id, first_name, last_name, date_of_birth, ssn, medicare_number, phone_number, address, city, province, postal_code, email) VALUES
+(18, 'Renee', 'Lacasse', '1975-01-01', 'VC0000014', 'LACA75010100', '514-555-4018', '10 Rue Volunteer', 'Montreal', 'QC', 'H2X1K8', 'renee.f@email.com'),
+(19, 'Bruno', 'Frechette', '1976-02-02', 'VC0000015', 'FREC76020200', '514-555-4019', '11 Rue Volunteer', 'Montreal', 'QC', 'H2X1K9', 'bruno.f@email.com'),
+(20, 'Celine', 'Marquis', '1977-03-03', 'VC0000016', 'MARQ77030300', '450-555-4020', '12 Rue Volunteer', 'Laval', 'QC', 'H7P2P3', 'celine.f@email.com'),
+(21, 'Denis', 'Sirois', '1978-04-04', 'VC0000017', 'SIRO78040400', '450-555-4021', '13 Rue Volunteer', 'Longueuil', 'QC', 'J4H1E6', 'denis.f@email.com'),
+(22, 'Ginette', 'Lefebvre', '1979-05-05', 'VC0000018', 'LEFE79050500', '450-555-4022', '14 Rue Volunteer', 'Brossard', 'QC', 'J4Y1A7', 'ginette.f@email.com');
+
+INSERT INTO ClubMember (membership_number, location_id, first_name, last_name, date_of_birth, gender, registration_date, height_cm, weight_kg, ssn, medicare_number, phone_number, address, city, province, postal_code, email) VALUES
+(33, 1, 'Leo', 'Lacasse', '2013-01-01', 'Male', '2023-01-01', 140.00, 35.00, 'M100000033', 'LACA13010199', '514-555-4033', '10 Rue Volunteer', 'Montreal', 'QC', 'H2X1K8', 'leo.lacasse@email.com'),
+(34, 1, 'Mia', 'Frechette', '2014-01-01', 'Female', '2023-01-01', 135.00, 33.00, 'M100000034', 'FREC14010199', '514-555-4034', '11 Rue Volunteer', 'Montreal', 'QC', 'H2X1K9', 'mia.frechette@email.com'),
+(35, 2, 'Theo', 'Marquis', '2012-01-01', 'Male', '2023-01-01', 142.00, 36.00, 'M100000035', 'MARQ12010199', '450-555-4035', '12 Rue Volunteer', 'Laval', 'QC', 'H7P2P3', 'theo.marquis@email.com'),
+(36, 3, 'Zoe', 'Sirois', '2011-01-01', 'Female', '2023-01-01', 145.00, 37.00, 'M100000036', 'SIRO11010199', '450-555-4036', '13 Rue Volunteer', 'Longueuil', 'QC', 'J4H1E6', 'zoe.sirois@email.com'),
+(37, 5, 'Noe', 'Lefebvre', '2013-01-01', 'Male', '2023-01-01', 138.00, 34.00, 'M100000037', 'LEFE13010199', '450-555-4037', '14 Rue Volunteer', 'Brossard', 'QC', 'J4Y1A8', 'noe.lefebvre@email.com');
+
+INSERT INTO ClubMemberFamilyRelation (relation_id, membership_number, family_member_id, relationship_type, family_member_type, start_date, end_date) VALUES
+(21, 33, 18, 'Mother', 'Primary', '2023-01-01', NULL),
+(22, 34, 19, 'Father', 'Primary', '2023-01-01', NULL),
+(23, 35, 20, 'Mother', 'Primary', '2023-01-01', NULL),
+(24, 36, 21, 'Father', 'Primary', '2023-01-01', NULL),
+(25, 37, 22, 'Mother', 'Primary', '2023-01-01', NULL);
+
+INSERT INTO FIFAParticipation (game_id, membership_number) VALUES
+(1, 33),
+(2, 34),
+(3, 35),
+(5, 36),
+(6, 37);
