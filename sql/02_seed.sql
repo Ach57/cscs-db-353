@@ -467,3 +467,26 @@ INSERT INTO FIFAParticipation (game_id, membership_number) VALUES
 -- ADDITION for QUERY-14: one more member who registered as a minor and is now an adult
 INSERT INTO ClubMember (membership_number, location_id, first_name, last_name, date_of_birth, gender, registration_date, height_cm, weight_kg, ssn, medicare_number, phone_number, address, city, province, postal_code, email) VALUES
 (20, 3, 'Xavier', 'Beaulieu', '2006-05-10', 'Male', '2021-03-15', 178.00, 70.00, 'M100000020', 'BEAU06051099', '450-555-3020', '60 Rue Fournier', 'Longueuil', 'QC', 'J4H8H0', 'xavier.beaulieu@email.com');
+
+
+-- ADDITION for QUERY-15: active members who only ever played Goalkeeper
+INSERT INTO ClubMember (membership_number, location_id, first_name, last_name, date_of_birth, gender, registration_date, height_cm, weight_kg, ssn, medicare_number, phone_number, address, city, province, postal_code, email) VALUES
+(21, 1, 'Marc', 'Bissonnette', '2000-01-01', 'Male', '2022-01-01', 180.00, 75.00, 'M100000021', 'BISS00010199', '514-555-3021', '70 Rue Ontario', 'Montreal', 'QC', 'H2K1K3', 'marc.bissonnette@email.com'),
+(22, 2, 'Julie', 'Racine', '1999-05-05', 'Female', '2022-01-01', 165.00, 58.00, 'M100000022', 'RACI99050599', '450-555-3022', '45 Rue Lévis', 'Laval', 'QC', 'H7G7G9', 'julie.racine@email.com'),
+(23, 2, 'Noah', 'St-Pierre', '2010-01-01', 'Male', '2022-01-01', 150.00, 45.00, 'M100000023', 'STPI10010199', '450-555-3023', '50 Rue Lévis', 'Laval', 'QC', 'H7G7H0', 'noah.stpierre@email.com'),
+(24, 3, 'Emile', 'Doucet', '2011-01-01', 'Male', '2022-01-01', 148.00, 42.00, 'M100000024', 'DOUC11010199', '450-555-3024', '45 Rue Fournier', 'Longueuil', 'QC', 'J4H8H1', 'emile.doucet@email.com'),
+(25, 2, 'Vincent', 'Aubin', '1998-03-03', 'Male', '2022-01-01', 182.00, 78.00, 'M100000025', 'AUBI98030399', '450-555-3025', '55 Rue Lévis', 'Laval', 'QC', 'H7G7H1', 'vincent.aubin@email.com');
+
+INSERT INTO Payment (payment_id, membership_number, payment_date, amount, payment_method, membership_year, installment_number) VALUES
+(24, 21, '2025-04-01', 200.00, 'Debit', 2025, 1),
+(25, 22, '2025-04-01', 200.00, 'Debit', 2025, 1),
+(26, 23, '2025-04-01', 100.00, 'Debit', 2025, 1),
+(27, 24, '2025-04-01', 100.00, 'Debit', 2025, 1),
+(28, 25, '2025-04-01', 200.00, 'Debit', 2025, 1);
+
+INSERT INTO TeamFormationAssignment (formation_id, membership_number, role) VALUES
+(1, 21, 'Goalkeeper'),
+(2, 22, 'Goalkeeper'),
+(3, 23, 'Goalkeeper'),
+(4, 24, 'Goalkeeper'),
+(7, 25, 'Goalkeeper');
