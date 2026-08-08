@@ -408,3 +408,34 @@ INSERT INTO FIFAParticipation (game_id, membership_number) VALUES
 INSERT INTO FIFAParticipation (game_id, membership_number) VALUES
 (3, 3),
 (3, 4);
+
+-- ADDITION for QUERY-12: seed Game-type sessions in Jan-May 2025 for 5 locations
+INSERT INTO Session (session_datetime, address, session_type) VALUES
+('2025-01-10 15:00:00', '789 Sports Road', 'Game'),
+('2025-01-25 15:00:00', '789 Sports Road', 'Game'),
+('2025-02-08 15:00:00', '789 Sports Road', 'Game'),
+('2025-02-22 15:00:00', '789 Sports Road', 'Game'),
+('2025-01-12 15:00:00', '456 Park Avenue', 'Game'),
+('2025-01-27 15:00:00', '456 Park Avenue', 'Game'),
+('2025-02-10 15:00:00', '456 Park Avenue', 'Game'),
+('2025-02-24 15:00:00', '456 Park Avenue', 'Game'),
+('2025-03-01 15:00:00', '123 Main Street', 'Game'),
+('2025-03-15 15:00:00', '123 Main Street', 'Game'),
+('2025-03-29 15:00:00', '123 Main Street', 'Game'),
+('2025-04-05 15:00:00', '123 Main Street', 'Game'),
+('2025-03-03 15:00:00', '200 Boulevard Laurentien', 'Game'),
+('2025-03-17 15:00:00', '200 Boulevard Laurentien', 'Game'),
+('2025-04-01 15:00:00', '200 Boulevard Laurentien', 'Game'),
+('2025-04-15 15:00:00', '200 Boulevard Laurentien', 'Game'),
+('2025-04-08 15:00:00', '300 Rue Taschereau', 'Game'),
+('2025-04-22 15:00:00', '300 Rue Taschereau', 'Game'),
+('2025-05-06 15:00:00', '300 Rue Taschereau', 'Game'),
+('2025-05-20 15:00:00', '300 Rue Taschereau', 'Game');
+
+-- New TeamFormation rows tied to those sessions (session_id 11-30, following on from existing 1-10)
+INSERT INTO TeamFormation (session_id, location_id, head_coach_id, team_name, score, team_category) VALUES
+(11, 1, 3, 'Red Lions', 2, 'Boys'), (12, 1, 3, 'Red Lions', 1, 'Boys'), (13, 1, 3, 'Red Lions', 3, 'Boys'), (14, 1, 3, 'Red Lions', 0, 'Boys'),
+(15, 2, 9, 'Green Wolves', 1, 'Boys'), (16, 2, 9, 'Green Wolves', 2, 'Boys'), (17, 2, 9, 'Green Wolves', 0, 'Boys'), (18, 2, 9, 'Green Wolves', 3, 'Boys'),
+(19, 3, 9, 'Blue Hawks', 2, 'Boys'), (20, 3, 9, 'Blue Hawks', 1, 'Boys'), (21, 3, 9, 'Blue Hawks', 4, 'Boys'), (22, 3, 9, 'Blue Hawks', 0, 'Boys'),
+(23, 4, 7, 'North Falcons', 1, 'Boys'), (24, 4, 7, 'North Falcons', 2, 'Boys'), (25, 4, 7, 'North Falcons', 3, 'Boys'), (26, 4, 7, 'North Falcons', 1, 'Boys'),
+(27, 5, 8, 'South Panthers', 2, 'Boys'), (28, 5, 8, 'South Panthers', 0, 'Boys'), (29, 5, 8, 'South Panthers', 1, 'Boys'), (30, 5, 8, 'South Panthers', 3, 'Boys');
