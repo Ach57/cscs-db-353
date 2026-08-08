@@ -462,3 +462,8 @@ INSERT INTO FIFAParticipation (game_id, membership_number) VALUES
 (3, 17),
 (5, 18),
 (6, 19);
+
+
+-- ADDITION for QUERY-14: one more member who registered as a minor and is now an adult
+INSERT INTO ClubMember (membership_number, location_id, first_name, last_name, date_of_birth, gender, registration_date, height_cm, weight_kg, ssn, medicare_number, phone_number, address, city, province, postal_code, email) VALUES
+(20, 3, 'Xavier', 'Beaulieu', '2006-05-10', 'Male', '2021-03-15', 178.00, 70.00, 'M100000020', 'BEAU06051099', '450-555-3020', '60 Rue Fournier', 'Longueuil', 'QC', 'J4H8H0', 'xavier.beaulieu@email.com');
