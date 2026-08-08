@@ -403,3 +403,8 @@ INSERT INTO ClubMember (membership_number, location_id, first_name, last_name, d
 INSERT INTO FIFAParticipation (game_id, membership_number) VALUES
 (5, 11), (5, 12),
 (6, 13), (6, 14);
+
+-- ADDITION for QUERY-11: give Maxime and Camille a 5th FIFA game each
+INSERT INTO FIFAParticipation (game_id, membership_number) VALUES
+(3, 3),
+(3, 4);
