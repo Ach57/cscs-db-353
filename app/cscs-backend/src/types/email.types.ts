@@ -21,6 +21,11 @@ export interface EmailLog {
   formation_id: number;
   subject: string;
   body_snippet: string;
+  sender_name?: string;
+  receiver_email?: string;
+  receiver_first_name?: string;
+  receiver_last_name?: string;
+  team_name?: string;
 }
 
 

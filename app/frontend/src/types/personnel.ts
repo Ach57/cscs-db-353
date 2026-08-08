@@ -19,7 +19,7 @@ export interface Personnel {
     mandate:Mandate; 
 }
 
-export type PersonnelInput = Omit<Personnel,"personnel_id">;
+export interface PersonnelInput { first_name:string; last_name:string; date_of_birth:string; ssn:string; medicare_number?:string; phone_number?:string; address?:string; city?:string; province?:string; postal_code?:string; email?:string; role:PersonnelRole; mandate:Mandate; }
 
 export interface PersonnelAssignment { 
     assignment_id:number; 

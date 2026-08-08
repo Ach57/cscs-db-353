@@ -72,6 +72,40 @@ case "$1" in
     docker compose -f docker-compose.remote.yml down
     ;;
 
+  dev-start)
+    echo "Starting full dev stack (MySQL + Backend + Frontend)..."
+    docker compose -f docker-compose.dev.yml up -d --build
+    ;;
+
+  dev-stop)
+    echo "Stopping dev stack..."
+    docker compose -f docker-compose.dev.yml down
+    ;;
+
+  dev-restart)
+    echo "Restarting dev stack..."
+    docker compose -f docker-compose.dev.yml down
+    docker compose -f docker-compose.dev.yml up -d --build
+    ;;
+
+  dev-reset)
+    echo "Removing dev stack containers and volumes..."
+    docker compose -f docker-compose.dev.yml down -v
+    docker compose -f docker-compose.dev.yml up -d --build
+    ;;
+
+  dev-logs)
+    docker compose -f docker-compose.dev.yml logs -f
+    ;;
+
+  dev-logs-backend)
+    docker compose -f docker-compose.dev.yml logs -f backend
+    ;;
+
+  dev-logs-frontend)
+    docker compose -f docker-compose.dev.yml logs -f frontend
+    ;;
+
   *)
     echo "Usage:"
     echo "  ./docker.sh start"
@@ -84,6 +118,15 @@ case "$1" in
     echo "  ./docker.sh verify                # run 04_verify.sql, print COUNT(*) per table"
     echo "  ./docker.sh adminer-remote-start   # Adminer GUI pointed at AITS server (port 8081)"
     echo "  ./docker.sh adminer-remote-stop"
+    echo ""
+    echo "  --- Full dev stack (docker-compose.dev.yml) ---"
+    echo "  ./scripts/local.sh dev-start       # build + start MySQL, Backend, Frontend"
+    echo "  ./scripts/local.sh dev-stop"
+    echo "  ./scripts/local.sh dev-restart"
+    echo "  ./scripts/local.sh dev-reset       # wipe volumes and rebuild"
+    echo "  ./scripts/local.sh dev-logs        # tail all services"
+    echo "  ./scripts/local.sh dev-logs-backend"
+    echo "  ./scripts/local.sh dev-logs-frontend"
     exit 1
     ;;
 esac

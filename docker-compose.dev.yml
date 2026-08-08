@@ -1,0 +1,79 @@
+# Full local dev stack: MySQL + Adminer + Backend + Frontend
+# Usage: ./scripts/local.sh dev-start | dev-stop | dev-reset | dev-logs
+services:
+  mysql:
+    image: mysql:9.2
+    container_name: cscs-dev-db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3307:3306"
+    volumes:
+      - cscs_dev_mysql_data:/var/lib/mysql
+      - ./sql/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      - ./sql/02_seed.sql:/docker-entrypoint-initdb.d/02_seed.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  adminer:
+    image: adminer
+    container_name: cscs-dev-adminer
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./app/cscs-backend
+    container_name: cscs-dev-backend
+    volumes:
+      - ./app/cscs-backend/src:/app/src
+      - ./sql:/sql:ro
+    ports:
+      - "${BACKEND_PORT:-4000}:4000"
+    environment:
+      NODE_ENV: development
+      PORT: 4000
+      # DB_HOST uses the service name — not localhost
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: ${MYSQL_USER}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      DB_NAME: ${MYSQL_DATABASE}
+      DB_CONNECTION_LIMIT: 10
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./app/frontend
+    container_name: cscs-dev-frontend
+    volumes:
+      - ./app/frontend/src:/app/src
+    ports:
+      - "3000:3000"
+    environment:
+      # Polling is required for file-watching inside Docker on macOS
+      CHOKIDAR_USEPOLLING: "true"
+      # CHOKIDAR_USEPOLLING=true in the frontend service: for macOs that uses a Linux VM
+      # Used so that inotify filesystem events don't propagage from Mac to the container.
+      # Browser fetches the API from the host, not the container network
+      VITE_API_URL: "http://localhost:${BACKEND_PORT:-4000}/api/v1"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  cscs_dev_mysql_data:

@@ -2,9 +2,8 @@ import {
   BarChart3,
   CreditCard,
   House,
+  Mail,
   MapPin,
-  ShieldUser,
-  UserRound,
   UsersRound,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
@@ -13,11 +12,10 @@ import "./Navbar.css";
 const navigationItems = [
   { label: "Dashboard", path: "/", icon: House },
   { label: "Locations", path: "/locations", icon: MapPin },
-  { label: "Personnel", path: "/personnel", icon: UsersRound },
-  { label: "Family Members", path: "/family-members", icon: UserRound },
-  { label: "Club Members", path: "/club-members", icon: ShieldUser },
+  { label: "People", path: "/people", icon: UsersRound },
   { label: "Team Formations", path: "/team-formations", icon: UsersRound },
   { label: "Payments", path: "/payments", icon: CreditCard },
+  { label: "Email Logs", path: "/email-logs", icon: Mail },
   { label: "Reports", path: "/reports", icon: BarChart3 },
 ];
 

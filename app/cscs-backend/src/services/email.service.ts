@@ -5,14 +5,28 @@ import { NotFoundError } from '../utils/AppError';
 
 export async function getAllEmailLogs(): Promise<EmailLog[]> {
   const [rows] = await pool.query<(EmailLog & RowDataPacket)[]>(
-    'SELECT * FROM EmailLog ORDER BY email_date DESC',
+    `SELECT el.*, l.name AS sender_name, cm.email AS receiver_email,
+            cm.first_name AS receiver_first_name, cm.last_name AS receiver_last_name,
+            tf.team_name
+       FROM EmailLog el
+       JOIN ClubMember cm ON cm.membership_number = el.membership_number
+       JOIN TeamFormation tf ON tf.formation_id = el.formation_id
+       JOIN Location l ON l.location_id = tf.location_id
+      ORDER BY el.email_date DESC, el.email_id DESC`,
   );
   return rows;
 }
 
 export async function getEmailLogById(id: number): Promise<EmailLog> {
   const [rows] = await pool.query<(EmailLog & RowDataPacket)[]>(
-    'SELECT * FROM EmailLog WHERE email_id = ?',
+    `SELECT el.*, l.name AS sender_name, cm.email AS receiver_email,
+            cm.first_name AS receiver_first_name, cm.last_name AS receiver_last_name,
+            tf.team_name
+       FROM EmailLog el
+       JOIN ClubMember cm ON cm.membership_number = el.membership_number
+       JOIN TeamFormation tf ON tf.formation_id = el.formation_id
+       JOIN Location l ON l.location_id = tf.location_id
+      WHERE el.email_id = ?`,
     [id],
   );
   if (!rows[0]) throw new NotFoundError('EmailLog', id);

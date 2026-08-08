@@ -6,6 +6,7 @@ import {
   UpdateFormationInput,
   AddFormationMemberInput,
   UpdateFormationMemberInput,
+  MemberAssignmentOverview,
 } from '../types/session.types';
 import { NotFoundError, ConflictError } from '../utils/AppError';
 
@@ -38,6 +39,79 @@ async function fetchFormationWithAssignments(
     ...(formations[0] as TeamFormationWithAssignments),
     assignments: assignments as TeamFormationWithAssignments['assignments'],
   };
+}
+
+
+export async function getMemberAssignmentOverview(): Promise<MemberAssignmentOverview[]> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT cm.membership_number,
+            cm.first_name,
+            cm.last_name,
+            cm.location_id,
+            l.name AS location_name,
+            COUNT(tfa.formation_id) AS assignment_count,
+            GROUP_CONCAT(
+              DISTINCT CONCAT(
+                tf.team_name,
+                ' (#', tf.formation_id, ')',
+                ' · ', DATE_FORMAT(s.session_datetime, '%Y-%m-%d %H:%i'),
+                ' · ', tfa.role
+              )
+              ORDER BY s.session_datetime, tf.team_name
+              SEPARATOR ' | '
+            ) AS assigned_teams
+       FROM ClubMember cm
+       JOIN Location l ON l.location_id = cm.location_id
+       LEFT JOIN TeamFormationAssignment tfa
+         ON tfa.membership_number = cm.membership_number
+       LEFT JOIN TeamFormation tf ON tf.formation_id = tfa.formation_id
+       LEFT JOIN Session s ON s.session_id = tf.session_id
+      GROUP BY cm.membership_number, cm.first_name, cm.last_name, cm.location_id, l.name
+      ORDER BY cm.membership_number ASC`,
+  );
+
+  return rows as MemberAssignmentOverview[];
+}
+
+export async function getAllFormations(): Promise<TeamFormationWithAssignments[]> {
+  const [formations] = await pool.query<RowDataPacket[]>(
+    `SELECT tf.*, s.session_datetime, s.session_type, s.address AS session_address,
+            l.name AS location_name,
+            p.first_name AS coach_first_name, p.last_name AS coach_last_name,
+            COUNT(tfa.membership_number) AS player_count
+       FROM TeamFormation tf
+       JOIN Session s ON s.session_id = tf.session_id
+       JOIN Location l ON l.location_id = tf.location_id
+       JOIN Personnel p ON p.personnel_id = tf.head_coach_id
+       LEFT JOIN TeamFormationAssignment tfa ON tfa.formation_id = tf.formation_id
+      GROUP BY tf.formation_id, s.session_datetime, s.session_type, s.address,
+               l.name, p.first_name, p.last_name
+      ORDER BY s.session_datetime ASC, tf.team_name ASC`,
+  );
+
+  if (!formations.length) return [];
+
+  const ids = formations.map((row) => row.formation_id as number);
+  const placeholders = ids.map(() => '?').join(',');
+  const [assignments] = await pool.query<RowDataPacket[]>(
+    `SELECT tfa.*, cm.first_name, cm.last_name
+       FROM TeamFormationAssignment tfa
+       JOIN ClubMember cm ON cm.membership_number = tfa.membership_number
+      WHERE tfa.formation_id IN (${placeholders})
+      ORDER BY tfa.formation_id, tfa.role, cm.last_name, cm.first_name`,
+    ids,
+  );
+
+  const byFormation = new Map<number, RowDataPacket[]>();
+  for (const assignment of assignments) {
+    const formationId = assignment.formation_id as number;
+    byFormation.set(formationId, [...(byFormation.get(formationId) ?? []), assignment]);
+  }
+
+  return formations.map((formation) => ({
+    ...(formation as TeamFormationWithAssignments),
+    assignments: (byFormation.get(formation.formation_id as number) ?? []) as TeamFormationWithAssignments['assignments'],
+  }));
 }
 
 export async function getFormationById(formationId: number): Promise<TeamFormationWithAssignments> {

@@ -1,29 +1,6 @@
 import RelationPage from "../components/common/relation-page/RelationPage";
 import { paymentFields } from "../components/common/data-grid/relations/payment.fields";
-import type { Payment } from "../types/payment";
+import type { Payment, PaymentInput } from "../types/payment";
 import { paymentApi } from "../services/payments";
-
-export default function Payments() {
-  return (
-    <RelationPage<Payment>
-      title="Payments"
-      description="Manage membership payments and installments."
-      initialData={[]}
-      columnDefs={paymentFields}
-      api={paymentApi}
-      idField="payment_id"
-      getRowId={(row) => String(row.payment_id)}
-      createEmptyRow={() => ({
-        payment_id: Date.now(),
-        membership_number: 0,
-        payment_date: new Date()
-          .toISOString()
-          .slice(0, 10),
-        amount: 0,
-        payment_method: "Cash",
-        membership_year: new Date().getFullYear(),
-        installment_number: 1,
-      })}
-    />
-  );
-}
+const toInput=(r:Payment):PaymentInput=>({membership_number:Number(r.membership_number),payment_date:r.payment_date,amount:Number(r.amount),payment_method:r.payment_method,membership_year:Number(r.membership_year),installment_number:Number(r.installment_number)});
+export default function Payments(){return <RelationPage<Payment,PaymentInput,Partial<PaymentInput>> title="Payments" description="Record membership fees, installments and donations." columnDefs={paymentFields} api={paymentApi} idField="payment_id" getRowId={r=>String(r.payment_id)} createEmptyRow={()=>({payment_id:-Date.now(),membership_number:0,payment_date:new Date().toISOString().slice(0,10),amount:0,payment_method:"Cash",membership_year:new Date().getFullYear(),installment_number:1})} validateRow={r=>[r.membership_number<=0?"Membership number must be positive.":"",r.amount<=0?"Amount must be greater than zero.":"",r.installment_number<1||r.installment_number>4?"Installment must be from 1 to 4.":""].filter(Boolean)} toCreateInput={toInput} toUpdateInput={toInput}/>}

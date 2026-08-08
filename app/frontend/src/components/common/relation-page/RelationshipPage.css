@@ -133,3 +133,24 @@
   background: #fef2f2;
   color: #b91c1c;
 }
+
+/* Keep controls readable while allowing the table to span the full viewport. */
+.relation-page {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+}
+
+.relation-page__tools {
+  padding: 28px clamp(18px, 3vw, 48px) 20px;
+}
+
+@media (max-width: 900px) {
+  .relation-page {
+    padding: 0;
+  }
+
+  .relation-page__tools {
+    padding: 22px 16px 16px;
+  }
+}

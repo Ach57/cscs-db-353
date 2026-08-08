@@ -116,7 +116,7 @@ INSERT INTO FamilyMemberAssignment (assignment_id, family_member_id, location_id
 -- =========================================
 INSERT INTO ClubMember (membership_number, location_id, first_name, last_name, date_of_birth, gender, registration_date, height_cm, weight_kg, ssn, medicare_number, phone_number, address, city, province, postal_code, email) VALUES
 (1, 1, 'Thomas',  'Lavoie',   '2010-02-14', 'Male'  ,'2022-08-01', 155.00, 45.50, 'M100000001', 'LAVO10021499', '514-555-3001', '15 Rue Sherbrooke', 'Montreal',  'QC', 'H2F6F6', 'thomas.lavoie@email.com'),
-(2, 1, 'Sophie',  'Bélanger', '2008-06-30', 'Female','2021-09-05', 162.00, 52.00, 'M100000002', 'BELA08063099', '514-555-3002', '20 Rue Ontario',    'Montreal',  'QC', 'H2K1K1', 'sophie.belanger@email.com'),
+(2, 1, 'Sophie',  'Belanger', '2008-06-30', 'Female','2021-09-05', 162.00, 52.00, 'M100000002', 'BELA08063099', '514-555-3002', '20 Rue Ontario',    'Montreal',  'QC', 'H2K1K1', 'sophie.belanger@email.com'),
 (3, 2, 'Maxime',  'Girard',   '2011-11-02', 'Male'  ,'2023-01-15', 148.00, 40.00, 'M100000003', 'GIRA11110299', '450-555-3003', '27 Rue Lévis',      'Laval',     'QC', 'H7G7G7', 'maxime.girard@email.com'),
 (4, 2, 'Camille', 'Dubois',   '2005-03-19', 'Female','2020-02-20', 170.00, 60.00, 'M100000004', 'DUBO05031999', '450-555-3004', '10 Rue des Pins',   'Laval',     'QC', 'H7L2L2', 'camille.dubois@email.com'),
 (5, 3, 'Antoine', 'Bergeron', '2012-09-08', 'Male'  ,'2023-06-10', 140.00, 36.00, 'M100000005', 'BERG12090899', '450-555-3005', '39 Rue Fournier',   'Longueuil', 'QC', 'J4H8H8', 'antoine.bergeron@email.com'),

@@ -184,8 +184,8 @@ export default function RelationPage<
       <div className="relation-page__tools">
         <header className="relation-page__header">
           <div className="relation-page__title">
-            <h1>{title}</h1>
-            <p>{description}</p>
+            <h1 style={{textAlign: "left"}}>{title}</h1>
+            <p style={{textAlign: "left"}}>{description}</p>
           </div>
           <div className="relation-page__count">{rows.length} record{rows.length === 1 ? "" : "s"}</div>
         </header>
