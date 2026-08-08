@@ -38,6 +38,7 @@ services:
     container_name: cscs-dev-backend
     volumes:
       - ./app/cscs-backend/src:/app/src
+      - ./sql:/sql:ro
     ports:
       - "${BACKEND_PORT:-4000}:4000"
     environment:
