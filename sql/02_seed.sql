@@ -439,3 +439,26 @@ INSERT INTO TeamFormation (session_id, location_id, head_coach_id, team_name, sc
 (19, 3, 9, 'Blue Hawks', 2, 'Boys'), (20, 3, 9, 'Blue Hawks', 1, 'Boys'), (21, 3, 9, 'Blue Hawks', 4, 'Boys'), (22, 3, 9, 'Blue Hawks', 0, 'Boys'),
 (23, 4, 7, 'North Falcons', 1, 'Boys'), (24, 4, 7, 'North Falcons', 2, 'Boys'), (25, 4, 7, 'North Falcons', 3, 'Boys'), (26, 4, 7, 'North Falcons', 1, 'Boys'),
 (27, 5, 8, 'South Panthers', 2, 'Boys'), (28, 5, 8, 'South Panthers', 0, 'Boys'), (29, 5, 8, 'South Panthers', 1, 'Boys'), (30, 5, 8, 'South Panthers', 3, 'Boys');
+
+
+-- ADDITION for QUERY-13: active members who played FIFA but were never assigned to a team formation
+INSERT INTO ClubMember (membership_number, location_id, first_name, last_name, date_of_birth, gender, registration_date, height_cm, weight_kg, ssn, medicare_number, phone_number, address, city, province, postal_code, email) VALUES
+(15, 1, 'Nathan', 'Cote', '2011-03-15', 'Male', '2023-01-10', 145.00, 38.00, 'M100000015', 'COTE11031599', '514-555-3015', '30 Rue Ontario', 'Montreal', 'QC', 'H2K1K2', 'nathan.cote@email.com'),
+(16, 2, 'Zoe', 'Perreault', '2010-06-22', 'Female', '2023-01-10', 152.00, 43.00, 'M100000016', 'PERR10062299', '450-555-3016', '35 Rue Lévis', 'Laval', 'QC', 'H7G7G8', 'zoe.perreault@email.com'),
+(17, 3, 'Eliot', 'Simard', '2009-09-05', 'Male', '2023-01-10', 160.00, 50.00, 'M100000017', 'SIMA09090599', '450-555-3017', '40 Rue Fournier', 'Longueuil', 'QC', 'J4H8H9', 'eliot.simard@email.com'),
+(18, 4, 'Ines', 'Boucher', '2012-01-18', 'Female', '2023-01-10', 140.00, 35.00, 'M100000018', 'BOUC12011899', '450-555-3018', '25 Boulevard Laurentien', 'Saint-Laurent', 'QC', 'H4M2M5', 'ines.boucher@email.com'),
+(19, 5, 'Felix', 'Cormier', '2008-11-30', 'Male', '2023-01-10', 165.00, 55.00, 'M100000019', 'CORM08113099', '450-555-3019', '35 Rue Taschereau', 'Brossard', 'QC', 'J4Y1A4', 'felix.cormier@email.com');
+
+INSERT INTO Payment (payment_id, membership_number, payment_date, amount, payment_method, membership_year, installment_number) VALUES
+(19, 15, '2025-03-01', 100.00, 'Debit', 2025, 1),
+(20, 16, '2025-03-01', 100.00, 'Debit', 2025, 1),
+(21, 17, '2025-03-01', 100.00, 'Debit', 2025, 1),
+(22, 18, '2025-03-01', 100.00, 'Debit', 2025, 1),
+(23, 19, '2025-03-01', 100.00, 'Debit', 2025, 1);
+
+INSERT INTO FIFAParticipation (game_id, membership_number) VALUES
+(1, 15),
+(2, 16),
+(3, 17),
+(5, 18),
+(6, 19);
