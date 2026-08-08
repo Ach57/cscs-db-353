@@ -392,3 +392,14 @@ INSERT INTO FIFAParticipation (game_id, membership_number) VALUES
 (11, 1), (11, 2), (11, 7),      -- Thomas, Sophie, Gabriel each +1
 (12, 3), (12, 4), (12, 8),      -- Maxime, Camille, Emma each +1
 (13, 1), (13, 7);               -- Thomas, Gabriel each +1 again
+
+-- ADDITION for QUERY-8: ensure locations 4 and 5 each have >=2 FIFA participants
+INSERT INTO ClubMember (membership_number, location_id, first_name, last_name, date_of_birth, gender, registration_date, height_cm, weight_kg, ssn, medicare_number, phone_number, address, city, province, postal_code, email) VALUES
+(11, 4, 'Julien', 'Beauchamp', '2005-02-11', 'Male', '2023-09-01', 172.00, 63.00, 'M100000011', 'BEAU05021199', '514-555-3011', '10 Rue Prince-Arthur', 'Saint-Laurent', 'QC', 'H4M2M3', 'julien.beauchamp@email.com'),
+(12, 4, 'Amelie', 'Rousseau', '2009-07-19', 'Female', '2023-09-01', 150.00, 44.00, 'M100000012', 'ROUS09071999', '514-555-3012', '20 Rue Grenet', 'Saint-Laurent', 'QC', 'H4M2M4', 'amelie.rousseau@email.com'),
+(13, 5, 'Olivier', 'Fournier', '2004-12-03', 'Male', '2023-10-01', 175.00, 68.00, 'M100000013', 'FOUR04120399', '450-555-3013', '5 Rue Taschereau', 'Brossard', 'QC', 'J4Y1A2', 'olivier.fournier@email.com'),
+(14, 5, 'Chloe', 'Marceau', '2010-04-27', 'Female', '2023-10-01', 148.00, 42.00, 'M100000014', 'MARC10042799', '450-555-3014', '15 Rue Taschereau', 'Brossard', 'QC', 'J4Y1A3', 'chloe.marceau@email.com');
+
+INSERT INTO FIFAParticipation (game_id, membership_number) VALUES
+(5, 11), (5, 12),
+(6, 13), (6, 14);
