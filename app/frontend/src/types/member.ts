@@ -37,7 +37,7 @@ export interface ClubMember {
     postal_code:string|null; 
 }
 
-export interface ClubMemberInput { location_id:number; first_name:string; last_name:string; date_of_birth:string; gender:"Boys"|"Girls"; registration_date:string; height_cm?:number; weight_kg?:number; ssn?:string; medicare_number?:string; phone_number?:string; email?:string; address?:string; city?:string; province?:string; postal_code?:string; }
+export interface ClubMemberInput { location_id:number; first_name:string; last_name:string; date_of_birth:string; gender:"Male"|"Female"; registration_date:string; height_cm?:number; weight_kg?:number; ssn?:string; medicare_number?:string; phone_number?:string; email?:string; address?:string; city?:string; province?:string; postal_code?:string; }
 
 export interface FamilyRelation { 
     relation_id:number; 
