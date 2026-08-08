@@ -24,7 +24,7 @@ export const clubMemberFields: ColDef<ClubMember>[] = [
     headerName: "Date of Birth",
     filter: "agDateColumnFilter",
   },
-  { field: "gender", headerName: "Gender", cellEditor: "agSelectCellEditor", cellEditorParams: { values: ["Boys", "Girls"] } },
+  { field: "gender", headerName: "Gender", cellEditor: "agSelectCellEditor", cellEditorParams: { values: ["Male", "Female"] } },
   {
     field: "registration_date",
     headerName: "Registration Date",
