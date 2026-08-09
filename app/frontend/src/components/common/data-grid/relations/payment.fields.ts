@@ -19,13 +19,6 @@ export const paymentFields: ColDef<Payment>[] = [
     field: "amount",
     headerName: "Amount",
     filter: "agNumberColumnFilter",
-    valueFormatter: ({ value }) =>
-      typeof value === "number"
-        ? new Intl.NumberFormat("en-CA", {
-            style: "currency",
-            currency: "CAD",
-          }).format(value)
-        : "",
   },
   {
     field: "payment_method",
