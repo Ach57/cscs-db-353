@@ -90,6 +90,22 @@ export async function getMemberFinancialSummary(membershipNumber: number, year: 
   );
   if (!rows[0]) throw new NotFoundError('ClubMember', membershipNumber);
   const row = rows[0];
-  const paid = Number(row.total_paid); const due = Number(row.fee_due);
-  return { ...row, donation_amount: Math.max(0, paid - due), balance_due: Math.max(0, due - paid), paid_in_full: paid >= due };
+  const paid = Number(row.total_paid);
+  const due = Number(row.fee_due);
+  const paidInFull = paid >= due;
+
+  return {
+    membership_number: Number(row.membership_number),
+    membership_year: year,
+    first_name: row.first_name,
+    last_name: row.last_name,
+    age_at_year_end: Number(row.age_at_year_end),
+    required_fee: due,
+    total_paid: paid,
+    donation: Math.max(0, paid - due),
+    balance_due: Math.max(0, due - paid),
+    installment_count: Number(row.installment_count),
+    paid_in_full: paidInFull,
+    status: paidInFull ? 'Paid' : 'Balance due',
+  };
 }
