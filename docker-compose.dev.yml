@@ -3,18 +3,21 @@
 services:
   mysql:
     image: mysql:9.2
-    container_name: cscs-dev-db
+    container_name: wqc353_1-db
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    command: --event-scheduler=ON
     ports:
       - "3307:3306"
     volumes:
       - cscs_dev_mysql_data:/var/lib/mysql
       - ./sql/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
       - ./sql/02_seed.sql:/docker-entrypoint-initdb.d/02_seed.sql
+      - ./sql/05_trigger.sql:/docker-entrypoint-initdb.d/05_trigger.sql
+      - ./sql/06_email_event.sql:/docker-entrypoint-initdb.d/06_email_event.sql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
@@ -25,7 +28,7 @@ services:
 
   adminer:
     image: adminer
-    container_name: cscs-dev-adminer
+    container_name: wqc353_1-adminer
     ports:
       - "8080:8080"
     depends_on:
@@ -35,7 +38,7 @@ services:
   backend:
     build:
       context: ./app/cscs-backend
-    container_name: cscs-dev-backend
+    container_name: wqc353_1-backend
     volumes:
       - ./app/cscs-backend/src:/app/src
       - ./sql:/sql:ro
@@ -59,7 +62,7 @@ services:
   frontend:
     build:
       context: ./app/frontend
-    container_name: cscs-dev-frontend
+    container_name: wqc353_1-frontend
     volumes:
       - ./app/frontend/src:/app/src
     ports:
