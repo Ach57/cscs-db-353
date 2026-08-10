@@ -55,6 +55,29 @@ case "$1" in
     docker exec -i -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" wqc353_1-db mysql -u root wqc353_1 < sql/04_verify.sql
     ;;
 
+  triggers)
+    echo "Applying triggers (sql/05_trigger.sql)..."
+    docker exec -i -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" wqc353_1-db mysql -u root wqc353_1 < sql/05_trigger.sql
+    ;;
+
+  trigger-tests)
+    echo "Running trigger tests (sql/07_trigger_tests.sql)..."
+    docker exec -i -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" wqc353_1-db mysql -u root wqc353_1 --table < sql/07_trigger_tests.sql
+    ;;
+
+  email-event)
+    echo "Applying email event (sql/06_email_event.sql)..."
+    docker exec -i -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" wqc353_1-db mysql -u root wqc353_1 < sql/06_email_event.sql
+    ;;
+
+  email-test)
+    # Call the procedure with today's date to generate logs for the next 7 days
+    echo "Generating email logs for the next 7 days..."
+    docker exec -i -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" wqc353_1-db \
+      mysql -u root wqc353_1 --table \
+      -e "CALL sp_generate_weekly_schedule_emails(CURDATE());"
+    ;;
+
   connect)
     echo "Connecting to local MySQL (wqc353_1)..."
     docker exec -it -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" wqc353_1-db mysql -u root wqc353_1
@@ -127,6 +150,14 @@ case "$1" in
     echo "  ./scripts/local.sh dev-logs        # tail all services"
     echo "  ./scripts/local.sh dev-logs-backend"
     echo "  ./scripts/local.sh dev-logs-frontend"
+    echo ""
+    echo "  --- Triggers ---"
+    echo "  ./scripts/local.sh triggers           # (re)apply 05_trigger.sql"
+    echo "  ./scripts/local.sh trigger-tests      # run 07_trigger_tests.sql, print PASS/FAIL table"
+    echo ""
+    echo "  --- Email Event ---"
+    echo "  ./scripts/local.sh email-event        # (re)apply 06_email_event.sql"
+    echo "  ./scripts/local.sh email-test         # manually fire the procedure for the next 7 days"
     exit 1
     ;;
 esac
