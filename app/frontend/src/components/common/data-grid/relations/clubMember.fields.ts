@@ -48,4 +48,24 @@ export const clubMemberFields: ColDef<ClubMember>[] = [
     field: "email",
     headerName: "Email",
   },
+  {
+    field: "family_member_id",
+    headerName: "Linked Family Member ID (minors only)",
+    minWidth: 220,
+    filter: "agNumberColumnFilter",
+  },
+  {
+    field: "relationship_type",
+    headerName: "Relationship",
+    cellEditor: "agSelectCellEditor",
+    cellEditorParams: {
+      values: ["Father", "Mother", "Grandfather", "Grandmother", "Tutor", "Partner", "Friend", "Other"],
+    },
+  },
+  {
+    field: "family_member_type",
+    headerName: "Family Member Type",
+    cellEditor: "agSelectCellEditor",
+    cellEditorParams: { values: ["Primary", "Secondary"] },
+  },
 ];

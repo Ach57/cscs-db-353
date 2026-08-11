@@ -13,10 +13,25 @@ DROP TRIGGER IF EXISTS trg_family_assignment_before_insert;
 DROP TRIGGER IF EXISTS trg_family_assignment_before_update;
 DROP TRIGGER IF EXISTS trg_team_formation_before_insert;
 DROP TRIGGER IF EXISTS trg_team_formation_before_update;
+DROP TRIGGER IF EXISTS trg_family_relation_before_delete;
+DROP TRIGGER IF EXISTS trg_family_relation_before_update;
+DROP PROCEDURE IF EXISTS sp_register_minor_club_member;
 
 DELIMITER $$
 
--- 1) ClubMember: minimum registration age + location capacity
+-- 1) ClubMember: minimum registration age + location capacity + (for
+--    minors) a linked family member registered atomically alongside them.
+--
+-- ClubMemberFamilyRelation has a FK on membership_number, so it can only be
+-- inserted *after* the ClubMember row exists -- a BEFORE INSERT trigger on
+-- ClubMember can never see a relation row that is still impossible to have
+-- created. Enforced instead via a session-scoped flag: direct INSERTs of a
+-- minor are rejected unless @cscs_allow_minor_insert = 1, and only
+-- sp_register_minor_club_member (below) is allowed to set that flag -- it
+-- sets it immediately before inserting ClubMember, clears it right after,
+-- and inserts the linked ClubMemberFamilyRelation row in the same
+-- transaction. This makes the procedure the only path that can create a
+-- minor club member, and that path always creates the family link too.
 CREATE TRIGGER trg_club_member_before_insert
 BEFORE INSERT ON ClubMember
 FOR EACH ROW
@@ -27,6 +42,12 @@ BEGIN
     IF TIMESTAMPDIFF(YEAR, NEW.date_of_birth, NEW.registration_date) < 4 THEN
         SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'A new club member must be at least 4 years old at registration.';
+    END IF;
+
+    IF TIMESTAMPDIFF(YEAR, NEW.date_of_birth, NEW.registration_date) < 18
+       AND COALESCE(@cscs_allow_minor_insert, 0) = 0 THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Minor club members must be registered via sp_register_minor_club_member so a linked family member is added at the same time.';
     END IF;
 
     SELECT capacity INTO max_capacity
@@ -352,6 +373,159 @@ BEGIN
         SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'Club member is not eligible: membership fee for the session year is not fully paid.';
     END IF;
+END$$
+
+-- 6) ClubMemberFamilyRelation: a minor club member must always keep at
+--    least one currently-active linked family member. membership_number is
+--    never changed by the app (it's a route param, not an editable field),
+--    so only end-dating/deleting the *last* active relation needs guarding.
+CREATE TRIGGER trg_family_relation_before_delete
+BEFORE DELETE ON ClubMemberFamilyRelation
+FOR EACH ROW
+BEGIN
+    DECLARE member_dob DATE;
+    DECLARE other_active INT DEFAULT 0;
+
+    SELECT date_of_birth INTO member_dob
+      FROM ClubMember
+     WHERE membership_number = OLD.membership_number;
+
+    IF TIMESTAMPDIFF(YEAR, member_dob, CURDATE()) < 18 THEN
+        SELECT COUNT(*) INTO other_active
+          FROM ClubMemberFamilyRelation cfr
+         WHERE cfr.membership_number = OLD.membership_number
+           AND cfr.relation_id <> OLD.relation_id
+           AND cfr.start_date <= CURDATE()
+           AND (cfr.end_date IS NULL OR cfr.end_date >= CURDATE());
+
+        IF other_active = 0 THEN
+            SIGNAL SQLSTATE '45000'
+                SET MESSAGE_TEXT = 'Cannot remove this family relation: a minor club member must always have at least one active linked family member.';
+        END IF;
+    END IF;
+END$$
+
+CREATE TRIGGER trg_family_relation_before_update
+BEFORE UPDATE ON ClubMemberFamilyRelation
+FOR EACH ROW
+BEGIN
+    DECLARE member_dob DATE;
+    DECLARE new_still_active INT DEFAULT 0;
+    DECLARE other_active INT DEFAULT 0;
+
+    SELECT date_of_birth INTO member_dob
+      FROM ClubMember
+     WHERE membership_number = NEW.membership_number;
+
+    IF TIMESTAMPDIFF(YEAR, member_dob, CURDATE()) < 18 THEN
+        IF NEW.start_date <= CURDATE()
+           AND (NEW.end_date IS NULL OR NEW.end_date >= CURDATE()) THEN
+            SET new_still_active = 1;
+        END IF;
+
+        IF new_still_active = 0 THEN
+            SELECT COUNT(*) INTO other_active
+              FROM ClubMemberFamilyRelation cfr
+             WHERE cfr.membership_number = NEW.membership_number
+               AND cfr.relation_id <> OLD.relation_id
+               AND cfr.start_date <= CURDATE()
+               AND (cfr.end_date IS NULL OR cfr.end_date >= CURDATE());
+
+            IF other_active = 0 THEN
+                SIGNAL SQLSTATE '45000'
+                    SET MESSAGE_TEXT = 'Cannot update this family relation: a minor club member must always have at least one active linked family member.';
+            END IF;
+        END IF;
+    END IF;
+END$$
+
+-- sp_register_minor_club_member: the only sanctioned way to create a minor
+-- ClubMember (trg_club_member_before_insert rejects any other attempt).
+-- Inserts the ClubMember and its required ClubMemberFamilyRelation in one
+-- transaction so a minor can never exist without a linked family member.
+CREATE PROCEDURE sp_register_minor_club_member(
+    IN p_location_id INT,
+    IN p_first_name VARCHAR(50),
+    IN p_last_name VARCHAR(50),
+    IN p_date_of_birth DATE,
+    IN p_gender ENUM('Male', 'Female'),
+    IN p_registration_date DATE,
+    IN p_height_cm DECIMAL(5,2),
+    IN p_weight_kg DECIMAL(5,2),
+    IN p_ssn VARCHAR(15),
+    IN p_medicare_number VARCHAR(20),
+    IN p_phone_number VARCHAR(20),
+    IN p_address VARCHAR(150),
+    IN p_city VARCHAR(60),
+    IN p_province CHAR(2),
+    IN p_postal_code VARCHAR(10),
+    IN p_email VARCHAR(100),
+    IN p_family_member_id INT,
+    IN p_relationship_type ENUM(
+        'Father', 'Mother', 'Grandfather', 'Grandmother',
+        'Tutor', 'Partner', 'Friend', 'Other'
+    ),
+    IN p_family_member_type ENUM('Primary', 'Secondary'),
+    IN p_relation_start_date DATE
+)
+BEGIN
+    DECLARE family_exists INT DEFAULT 0;
+    DECLARE new_membership_number INT;
+
+    -- Reset the flag and re-raise on any failure so a rolled-back call
+    -- never leaves @cscs_allow_minor_insert stuck at 1 on a pooled
+    -- connection that later runs an unrelated direct INSERT.
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SET @cscs_allow_minor_insert = 0;
+        RESIGNAL;
+    END;
+
+    IF TIMESTAMPDIFF(YEAR, p_date_of_birth, p_registration_date) >= 18 THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'sp_register_minor_club_member is only for minors; insert adult club members directly.';
+    END IF;
+
+    SELECT COUNT(*) INTO family_exists
+      FROM FamilyMember
+     WHERE family_member_id = p_family_member_id;
+
+    IF family_exists = 0 THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Linked family member must already exist in the system.';
+    END IF;
+
+    START TRANSACTION;
+
+    SET @cscs_allow_minor_insert = 1;
+
+    INSERT INTO ClubMember
+        (location_id, first_name, last_name, date_of_birth, gender, registration_date,
+         height_cm, weight_kg, ssn, medicare_number, phone_number,
+         address, city, province, postal_code, email)
+    VALUES
+        (p_location_id, p_first_name, p_last_name, p_date_of_birth, p_gender, p_registration_date,
+         p_height_cm, p_weight_kg, p_ssn, p_medicare_number, p_phone_number,
+         p_address, p_city, p_province, p_postal_code, p_email);
+
+    SET @cscs_allow_minor_insert = 0;
+    SET new_membership_number = LAST_INSERT_ID();
+
+    INSERT INTO ClubMemberFamilyRelation
+        (membership_number, family_member_id, relationship_type, family_member_type, start_date)
+    VALUES
+        (new_membership_number, p_family_member_id, p_relationship_type, p_family_member_type, p_relation_start_date);
+
+    COMMIT;
+
+    -- Exposed as both a session variable (so a caller inside another
+    -- procedure, which can't capture a CALL's result set directly, can read
+    -- it via `SELECT @cscs_last_minor_membership_number`) and a result set
+    -- (convenient for the app's mysql2 client, which reads CALL result sets
+    -- directly).
+    SET @cscs_last_minor_membership_number = new_membership_number;
+    SELECT new_membership_number AS membership_number;
 END$$
 
 DELIMITER ;

@@ -15,6 +15,19 @@ export const relationshipTypeEnum = z.enum([
 
 export const familyMemberTypeEnum = z.enum(['Primary', 'Secondary']);
 
+const dateStringSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD');
+
+// Carries the linked-family-member data through to
+// sp_register_minor_club_member when the club member being created is a
+// minor. Whether it's actually required is a DB-trigger decision, not
+// re-validated here -- see trg_club_member_before_insert in 05_trigger.sql.
+const familyRelationForRegistrationSchema = z.object({
+  family_member_id: z.number().int().positive(),
+  relationship_type: relationshipTypeEnum,
+  family_member_type: familyMemberTypeEnum,
+  start_date: dateStringSchema,
+});
+
 const baseClubMemberFields = {
   location_id: z.number().int().positive(),
   first_name: z.string().min(1).max(50),
@@ -34,7 +47,10 @@ const baseClubMemberFields = {
   email: z.string().email().max(100).optional(),
 };
 
-export const createClubMemberSchema = z.object(baseClubMemberFields);
+export const createClubMemberSchema = z.object({
+  ...baseClubMemberFields,
+  family_relation: familyRelationForRegistrationSchema.optional(),
+});
 
 export const updateClubMemberSchema = z
   .object(baseClubMemberFields)

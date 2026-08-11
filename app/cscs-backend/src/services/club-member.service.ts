@@ -35,7 +35,31 @@ export async function getClubMemberById(id: number): Promise<ClubMember> {
 }
 
 export async function createClubMember(input: CreateClubMemberInput): Promise<ClubMember> {
+  const { family_relation, ...member } = input;
   try {
+    // trg_club_member_before_insert rejects a direct INSERT of a minor --
+    // the DB only allows a minor to be created via sp_register_minor_club_member,
+    // which inserts the ClubMember and its required ClubMemberFamilyRelation
+    // together in one transaction. See sql/05_trigger.sql.
+    if (family_relation) {
+      const [rows] = await pool.query<RowDataPacket[][]>(
+        `CALL sp_register_minor_club_member(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          member.location_id, member.first_name, member.last_name, member.date_of_birth,
+          member.gender, member.registration_date,
+          member.height_cm ?? null, member.weight_kg ?? null,
+          member.ssn ?? null, member.medicare_number ?? null,
+          member.phone_number ?? null, member.address ?? null,
+          member.city ?? null, member.province ?? null,
+          member.postal_code ?? null, member.email ?? null,
+          family_relation.family_member_id, family_relation.relationship_type,
+          family_relation.family_member_type, family_relation.start_date,
+        ],
+      );
+      const membershipNumber = (rows[0][0] as { membership_number: number }).membership_number;
+      return getClubMemberById(membershipNumber);
+    }
+
     const [result] = await pool.query<ResultSetHeader>(
       `INSERT INTO ClubMember
          (location_id, first_name, last_name, date_of_birth, gender, registration_date,
@@ -43,13 +67,13 @@ export async function createClubMember(input: CreateClubMemberInput): Promise<Cl
           address, city, province, postal_code, email)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        input.location_id, input.first_name, input.last_name, input.date_of_birth,
-        input.gender, input.registration_date,
-        input.height_cm ?? null, input.weight_kg ?? null,
-        input.ssn ?? null, input.medicare_number ?? null,
-        input.phone_number ?? null, input.address ?? null,
-        input.city ?? null, input.province ?? null,
-        input.postal_code ?? null, input.email ?? null,
+        member.location_id, member.first_name, member.last_name, member.date_of_birth,
+        member.gender, member.registration_date,
+        member.height_cm ?? null, member.weight_kg ?? null,
+        member.ssn ?? null, member.medicare_number ?? null,
+        member.phone_number ?? null, member.address ?? null,
+        member.city ?? null, member.province ?? null,
+        member.postal_code ?? null, member.email ?? null,
       ],
     );
     return getClubMemberById(result.insertId);
