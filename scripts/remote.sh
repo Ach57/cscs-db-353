@@ -25,11 +25,13 @@ export $(grep -v '^#' .env.remote | xargs)
 # sidesteps this — it uses a client build old enough to still support it.
 run_sql() {
   local file="$1"
+  local extra="${2:-}"
   echo "Running $file against $AITS_DB_HOST/$AITS_DB_NAME ..."
+  # shellcheck disable=SC2086
   docker run --rm -i \
     -e MYSQL_PWD="$AITS_DB_PASSWORD" \
     mysql:8.0 \
-    mysql -h "$AITS_DB_HOST" -u "$AITS_DB_USER" "$AITS_DB_NAME" < "$file"
+    mysql -h "$AITS_DB_HOST" -u "$AITS_DB_USER" $extra "$AITS_DB_NAME" < "$file"
 }
 
 confirm_shared_db() {
@@ -68,6 +70,29 @@ case "${1:-}" in
     echo "Schema + seed loaded."
     ;;
 
+  triggers)
+    confirm_shared_db
+    run_sql sql/05_trigger.sql
+    ;;
+
+  trigger-tests)
+    run_sql sql/07_trigger_tests.sql --table
+    ;;
+
+  email-event)
+    confirm_shared_db
+    run_sql sql/06_email_event.sql
+    ;;
+
+  email-test)
+    echo "Generating email logs for the next 7 days on AITS ($AITS_DB_NAME)..."
+    docker run --rm -i \
+      -e MYSQL_PWD="$AITS_DB_PASSWORD" \
+      mysql:8.0 \
+      mysql -h "$AITS_DB_HOST" -u "$AITS_DB_USER" --table "$AITS_DB_NAME" \
+      -e "CALL sp_generate_weekly_schedule_emails(CURDATE());"
+    ;;
+
   connect)
     docker run --rm -it \
       -e MYSQL_PWD="$AITS_DB_PASSWORD" \
@@ -77,14 +102,24 @@ case "${1:-}" in
 
   *)
     echo "Usage:"
-    echo "  ./remote.sh connect   # open an interactive mysql shell on AITS"
-    echo "  ./remote.sh schema    # run 01_schema.sql on AITS (asks for confirmation)"
-    echo "  ./remote.sh seed      # run 02_seed.sql on AITS (asks for confirmation)"
-    echo "  ./remote.sh setup     # schema + seed in one go (asks for confirmation)"
-    echo "  ./remote.sh queries   # run 03_queries.sql, print results"
-    echo "  ./remote.sh verify    # run 04_verify.sql, print COUNT(*) per table"
+    echo "  ./scripts/remote.sh connect          # open an interactive mysql shell on AITS"
+    echo "  ./scripts/remote.sh schema           # run 01_schema.sql on AITS (asks for confirmation)"
+    echo "  ./scripts/remote.sh seed             # run 02_seed.sql on AITS (asks for confirmation)"
+    echo "  ./scripts/remote.sh setup            # schema + seed in one go (asks for confirmation)"
+    echo "  ./scripts/remote.sh queries          # run 03_queries.sql, print results"
+    echo "  ./scripts/remote.sh verify           # run 04_verify.sql, print COUNT(*) per table"
     echo ""
-    echo "Requires .env.remote (copy .env.remote.example and fill in the password)."
+    echo "  --- Triggers ---"
+    echo "  ./scripts/remote.sh triggers         # (re)apply 05_trigger.sql (asks for confirmation)"
+    echo "  ./scripts/remote.sh trigger-tests    # run 07_trigger_tests.sql, print PASS/FAIL table"
+    echo ""
+    echo "  --- Email Event ---"
+    echo "  ./scripts/remote.sh email-event      # (re)apply 06_email_event.sql (asks for confirmation)"
+    echo "  ./scripts/remote.sh email-test       # manually fire the procedure for the next 7 days"
+    echo ""
+    echo "Or use the Makefile: make remote-<command>"
+    echo ""
+    echo "Requires .env.remote (copy env.remote.example and fill in the password)."
     echo "Requires Concordia VPN if you're off the ENCS network."
     echo "Requires Docker Desktop running (used to get a compatible mysql client)."
     exit 1
