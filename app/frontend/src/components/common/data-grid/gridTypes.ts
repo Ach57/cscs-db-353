@@ -1,11 +1,4 @@
-import type {
-  CellValueChangedEvent,
-  ColDef,
-  GridApi,
-  GridReadyEvent,
-  RowClickedEvent,
-  SelectionChangedEvent,
-} from "ag-grid-community";
+import type { CellValueChangedEvent, ColDef, GridApi } from 'ag-grid-community';
 
 export interface DataGridProps<T extends object> {
   rowData: T[];

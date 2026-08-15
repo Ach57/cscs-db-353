@@ -40,7 +40,6 @@ services:
       context: ./app/cscs-backend
     container_name: wqc353_1-backend
     volumes:
-      - ./app/cscs-backend/src:/app/src
       - ./sql:/sql:ro
     ports:
       - "${BACKEND_PORT:-4000}:4000"
@@ -62,18 +61,12 @@ services:
   frontend:
     build:
       context: ./app/frontend
+      args:
+        # VITE_* vars are inlined at build time, not runtime
+        VITE_API_URL: "http://localhost:${BACKEND_PORT:-4000}/api/v1"
     container_name: wqc353_1-frontend
-    volumes:
-      - ./app/frontend/src:/app/src
     ports:
       - "3000:3000"
-    environment:
-      # Polling is required for file-watching inside Docker on macOS
-      CHOKIDAR_USEPOLLING: "true"
-      # CHOKIDAR_USEPOLLING=true in the frontend service: for macOs that uses a Linux VM
-      # Used so that inotify filesystem events don't propagage from Mac to the container.
-      # Browser fetches the API from the host, not the container network
-      VITE_API_URL: "http://localhost:${BACKEND_PORT:-4000}/api/v1"
     depends_on:
       - backend
     restart: unless-stopped
