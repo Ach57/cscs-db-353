@@ -49,6 +49,7 @@ BEGIN
     DECLARE v_test_major INT;
     DECLARE v_test_nopay INT;
     DECLARE v_test_minor INT;
+    DECLARE v_test_fifa_game INT;
 
     DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -272,6 +273,47 @@ BEGIN
     VALUES (v_formA, v_test_minor, 'Center Back');
     INSERT INTO test_results VALUES
         (17, 'Minor with no family relation blocks assignment', 'ERROR', IF(v_err_msg IS NULL, 'SUCCESS', 'ERROR'),
+         IF(v_err_msg IS NULL, 'FAIL', 'PASS'), v_err_msg);
+
+    -- ================================================================
+    -- 7) Location: at most one Head location club-wide
+    -- ================================================================
+    SET v_err_msg = NULL;
+    INSERT INTO Location (location_type, name, address, city, province, postal_code, capacity)
+    VALUES ('Head', 'Test Head Location', '999 Test Ave', 'Montreal', 'QC', 'H0H 0H0', 50);
+    INSERT INTO test_results VALUES
+        (18, 'Insert second Head location blocked', 'ERROR', IF(v_err_msg IS NULL, 'SUCCESS', 'ERROR'),
+         IF(v_err_msg IS NULL, 'FAIL', 'PASS'), v_err_msg);
+
+    -- ================================================================
+    -- 8) FIFAParticipation: fee check + minor family check
+    --    v_test_major (born 1990, paid 200 for 2030) -> valid
+    --    v_test_nopay (born 1990, no payment)        -> fee blocked
+    --    v_test_minor (born 2020, paid but no family) -> family blocked
+    -- ================================================================
+    INSERT INTO FIFAGame (location_id, team_name, opponent_name, game_date, team_score, opponent_score)
+    VALUES (1, 'Test FC', 'Rival FC', '2030-06-01', 0, 0);
+    SET v_test_fifa_game = LAST_INSERT_ID();
+
+    SET v_err_msg = NULL;
+    INSERT INTO FIFAParticipation (game_id, membership_number)
+    VALUES (v_test_fifa_game, v_test_major);
+    INSERT INTO test_results VALUES
+        (19, 'FIFA - valid paid major member', 'SUCCESS', IF(v_err_msg IS NULL, 'SUCCESS', 'ERROR'),
+         IF(v_err_msg IS NULL, 'PASS', 'FAIL'), v_err_msg);
+
+    SET v_err_msg = NULL;
+    INSERT INTO FIFAParticipation (game_id, membership_number)
+    VALUES (v_test_fifa_game, v_test_nopay);
+    INSERT INTO test_results VALUES
+        (20, 'FIFA - unpaid member blocked', 'ERROR', IF(v_err_msg IS NULL, 'SUCCESS', 'ERROR'),
+         IF(v_err_msg IS NULL, 'FAIL', 'PASS'), v_err_msg);
+
+    SET v_err_msg = NULL;
+    INSERT INTO FIFAParticipation (game_id, membership_number)
+    VALUES (v_test_fifa_game, v_test_minor);
+    INSERT INTO test_results VALUES
+        (21, 'FIFA - minor without family relation blocked', 'ERROR', IF(v_err_msg IS NULL, 'SUCCESS', 'ERROR'),
          IF(v_err_msg IS NULL, 'FAIL', 'PASS'), v_err_msg);
 
 END$$

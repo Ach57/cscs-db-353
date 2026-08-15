@@ -1,4 +1,6 @@
 ```
+./scripts/local.sh trigger-tests
+Running trigger tests (sql/07_trigger_tests.sql)...
 +---------+---------------------------------------------------+----------+---------+---------+--------------------------------------------------------------------------------------+
 | test_id | description                                       | expected | actual  | verdict | trigger_message                                                                      |
 +---------+---------------------------------------------------+----------+---------+---------+--------------------------------------------------------------------------------------+
@@ -19,10 +21,14 @@
 |      15 | Same-day assignment <3h apart                     | ERROR    | ERROR   | PASS    | Conflicting assignment: same-day formations must be at least 3 hours apart.          |
 |      16 | Same-day assignment >=3h apart                    | SUCCESS  | SUCCESS | PASS    | NULL                                                                                 |
 |      17 | Minor with no family relation blocks assignment   | ERROR    | ERROR   | PASS    | Minor club member must have a family member relationship active on the session date. |
+|      18 | Insert second Head location blocked               | ERROR    | ERROR   | PASS    | The club can only have one Head location.                                            |
+|      19 | FIFA - valid paid major member                    | SUCCESS  | SUCCESS | PASS    | NULL                                                                                 |
+|      20 | FIFA - unpaid member blocked                      | ERROR    | ERROR   | PASS    | Club member is not eligible: membership fee for the game year is not fully paid.     |
+|      21 | FIFA - minor without family relation blocked      | ERROR    | ERROR   | PASS    | Minor club member must have a family member relationship active on the game date.    |
 +---------+---------------------------------------------------+----------+---------+---------+--------------------------------------------------------------------------------------+
 +--------+--------+-------+
 | passed | failed | total |
 +--------+--------+-------+
-|     17 |      0 |    17 |
+|     21 |      0 |    21 |
 +--------+--------+-------+
 ```
