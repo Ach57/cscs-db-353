@@ -17,6 +17,8 @@ DROP TRIGGER IF EXISTS trg_family_assignment_before_insert;
 DROP TRIGGER IF EXISTS trg_family_assignment_before_update;
 DROP TRIGGER IF EXISTS trg_team_formation_before_insert;
 DROP TRIGGER IF EXISTS trg_team_formation_before_update;
+DROP TRIGGER IF EXISTS trg_family_relation_before_delete;
+DROP TRIGGER IF EXISTS trg_family_relation_before_update;
 
 DELIMITER $$
 
@@ -468,6 +470,69 @@ BEGIN
     IF paid_amount < required_fee THEN
         SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'Club member is not eligible: membership fee for the game year is not fully paid.';
+    END IF;
+END$$
+
+-- 8) ClubMemberFamilyRelation: a minor's last active family relation cannot
+--    be deleted or end-dated, keeping the invariant that every active minor
+--    always has at least one linked family member.
+CREATE TRIGGER trg_family_relation_before_delete
+BEFORE DELETE ON ClubMemberFamilyRelation
+FOR EACH ROW
+BEGIN
+    DECLARE member_dob DATE;
+    DECLARE other_active INT DEFAULT 0;
+
+    SELECT date_of_birth INTO member_dob
+      FROM ClubMember
+     WHERE membership_number = OLD.membership_number;
+
+    IF TIMESTAMPDIFF(YEAR, member_dob, CURDATE()) < 18 THEN
+        SELECT COUNT(*) INTO other_active
+          FROM ClubMemberFamilyRelation cfr
+         WHERE cfr.membership_number = OLD.membership_number
+           AND cfr.relation_id <> OLD.relation_id
+           AND cfr.start_date <= CURDATE()
+           AND (cfr.end_date IS NULL OR cfr.end_date >= CURDATE());
+
+        IF other_active = 0 THEN
+            SIGNAL SQLSTATE '45000'
+                SET MESSAGE_TEXT = 'Cannot remove this family relation: a minor club member must always have at least one active linked family member.';
+        END IF;
+    END IF;
+END$$
+
+CREATE TRIGGER trg_family_relation_before_update
+BEFORE UPDATE ON ClubMemberFamilyRelation
+FOR EACH ROW
+BEGIN
+    DECLARE member_dob DATE;
+    DECLARE new_still_active INT DEFAULT 0;
+    DECLARE other_active INT DEFAULT 0;
+
+    SELECT date_of_birth INTO member_dob
+      FROM ClubMember
+     WHERE membership_number = NEW.membership_number;
+
+    IF TIMESTAMPDIFF(YEAR, member_dob, CURDATE()) < 18 THEN
+        IF NEW.start_date <= CURDATE()
+           AND (NEW.end_date IS NULL OR NEW.end_date >= CURDATE()) THEN
+            SET new_still_active = 1;
+        END IF;
+
+        IF new_still_active = 0 THEN
+            SELECT COUNT(*) INTO other_active
+              FROM ClubMemberFamilyRelation cfr
+             WHERE cfr.membership_number = NEW.membership_number
+               AND cfr.relation_id <> OLD.relation_id
+               AND cfr.start_date <= CURDATE()
+               AND (cfr.end_date IS NULL OR cfr.end_date >= CURDATE());
+
+            IF other_active = 0 THEN
+                SIGNAL SQLSTATE '45000'
+                    SET MESSAGE_TEXT = 'Cannot update this family relation: a minor club member must always have at least one active linked family member.';
+            END IF;
+        END IF;
     END IF;
 END$$
 

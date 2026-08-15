@@ -5,10 +5,10 @@
 -- SIGNAL (via a CONTINUE HANDLER) instead of letting it abort the script,
 -- and logs one PASS/FAIL row per test into a results table.
 --
--- All test data is inserted and then ROLLBACK'd, so nothing persists in
--- the real tables. The results table is created ENGINE=MEMORY, which is
--- non-transactional, so it survives that ROLLBACK and is still there for
--- the final SELECT and for you to screenshot.
+-- All tests run inside a single START TRANSACTION / ROLLBACK, so nothing
+-- persists in the real tables. The results table is created ENGINE=MEMORY,
+-- which is non-transactional, so it survives the ROLLBACK and is still
+-- there for the final SELECT and for you to screenshot.
 --
 -- A NULL trigger_message is expected (not an error) on every row where
 -- expected = SUCCESS: no SIGNAL means the CONTINUE HANDLER never ran, so
@@ -78,24 +78,29 @@ BEGIN
        SET capacity = (SELECT COUNT(*) FROM ClubMember WHERE location_id = 3)
      WHERE location_id = 3;
 
+    -- Adult DOB: this insert must fail on the capacity check alone, not on
+    -- the minor-registration guard added below (section 7).
     SET v_err_msg = NULL;
     INSERT INTO ClubMember
         (location_id, first_name, last_name, date_of_birth, gender, registration_date, ssn, medicare_number)
     VALUES
-        (3, 'Test', 'Overflow', '2015-01-01', 'Male', '2024-01-01', 'TESTSSN002', 'TESTMED002');
+        (3, 'Test', 'Overflow', '1990-01-01', 'Male', '2024-01-01', 'TESTSSN002', 'TESTMED002');
     INSERT INTO test_results VALUES
         (2, 'ClubMember insert at location already at capacity', 'ERROR', IF(v_err_msg IS NULL, 'SUCCESS', 'ERROR'),
          IF(v_err_msg IS NULL, 'FAIL', 'PASS'), v_err_msg);
 
     UPDATE Location SET capacity = v_orig_cap WHERE location_id = 3;
 
+    -- Adult DOB, same reason: a direct INSERT of a minor is rejected by
+    -- design (section 7), so this "plain valid insert" case has to be an
+    -- adult to actually exercise the SUCCESS path.
     SET v_err_msg = NULL;
     INSERT INTO ClubMember
         (location_id, first_name, last_name, date_of_birth, gender, registration_date, ssn, medicare_number)
     VALUES
-        (1, 'Test', 'ValidMinor', '2015-01-01', 'Male', '2024-01-01', 'TESTSSN003', 'TESTMED003');
+        (1, 'Test', 'ValidAdult', '1995-01-01', 'Male', '2024-01-01', 'TESTSSN003', 'TESTMED003');
     INSERT INTO test_results VALUES
-        (3, 'Valid ClubMember insert', 'SUCCESS', IF(v_err_msg IS NULL, 'SUCCESS', 'ERROR'),
+        (3, 'Valid ClubMember insert (adult, direct)', 'SUCCESS', IF(v_err_msg IS NULL, 'SUCCESS', 'ERROR'),
          IF(v_err_msg IS NULL, 'PASS', 'FAIL'), v_err_msg);
 
     -- ================================================================
@@ -258,13 +263,15 @@ BEGIN
         (16, 'Same-day assignment >=3h apart', 'SUCCESS', IF(v_err_msg IS NULL, 'SUCCESS', 'ERROR'),
          IF(v_err_msg IS NULL, 'PASS', 'FAIL'), v_err_msg);
 
-    -- minor with no active family relation, but fully paid -> should still
-    -- be rejected on the family-relation check.
+    -- Minor with a future-dated relation (not active on the 2030 session date) -> family-relation check rejects.
     INSERT INTO ClubMember
         (location_id, first_name, last_name, date_of_birth, gender, registration_date, ssn, medicare_number)
     VALUES
         (1, 'Test', 'MinorNoFamily', '2020-01-01', 'Male', '2024-01-01', 'TESTSSN006', 'TESTMED006');
     SET v_test_minor = LAST_INSERT_ID();
+    INSERT INTO ClubMemberFamilyRelation
+        (membership_number, family_member_id, relationship_type, family_member_type, start_date)
+    VALUES (v_test_minor, 1, 'Father', 'Primary', '2031-06-01');
     INSERT INTO Payment (membership_number, payment_date, amount, payment_method, membership_year, installment_number)
     VALUES (v_test_minor, '2029-12-31', 100.00, 'Debit', 2030, 1);
 
@@ -316,7 +323,59 @@ BEGIN
         (21, 'FIFA - minor without family relation blocked', 'ERROR', IF(v_err_msg IS NULL, 'SUCCESS', 'ERROR'),
          IF(v_err_msg IS NULL, 'FAIL', 'PASS'), v_err_msg);
 
+    -- ================================================================
+    -- 9) ClubMemberFamilyRelation: minor's last active relation cannot
+    --    be deleted or end-dated (trg_family_relation_before_delete /
+    --    trg_family_relation_before_update).
+    --    v_test_minor has one relation (fm1, start_date '2031-06-01'),
+    --    which is future-dated: 0 active relations on CURDATE.
+    -- ================================================================
+
+    -- test 22: delete the only relation → other_active = 0 → blocked
+    SET v_err_msg = NULL;
+    DELETE FROM ClubMemberFamilyRelation
+     WHERE membership_number = v_test_minor AND family_member_id = 1 AND start_date = '2031-06-01';
+    INSERT INTO test_results VALUES
+        (22, 'Delete last family relation of a minor blocked', 'ERROR', IF(v_err_msg IS NULL, 'SUCCESS', 'ERROR'),
+         IF(v_err_msg IS NULL, 'FAIL', 'PASS'), v_err_msg);
+
+    -- test 23: add a currently-active relation, then delete the future-dated one → succeeds
+    INSERT INTO ClubMemberFamilyRelation
+        (membership_number, family_member_id, relationship_type, family_member_type, start_date)
+    VALUES (v_test_minor, 1, 'Father', 'Primary', '2024-01-01');
+
+    SET v_err_msg = NULL;
+    DELETE FROM ClubMemberFamilyRelation
+     WHERE membership_number = v_test_minor AND family_member_id = 1 AND start_date = '2031-06-01';
+    INSERT INTO test_results VALUES
+        (23, 'Delete non-last family relation of a minor succeeds', 'SUCCESS', IF(v_err_msg IS NULL, 'SUCCESS', 'ERROR'),
+         IF(v_err_msg IS NULL, 'PASS', 'FAIL'), v_err_msg);
+
+    -- test 24: end-date the only active relation (fm1/'2024-01-01') → blocked
+    SET v_err_msg = NULL;
+    UPDATE ClubMemberFamilyRelation
+       SET end_date = DATE_SUB(CURDATE(), INTERVAL 1 DAY)
+     WHERE membership_number = v_test_minor AND family_member_id = 1 AND start_date = '2024-01-01';
+    INSERT INTO test_results VALUES
+        (24, 'End-dating last active family relation of a minor blocked', 'ERROR', IF(v_err_msg IS NULL, 'SUCCESS', 'ERROR'),
+         IF(v_err_msg IS NULL, 'FAIL', 'PASS'), v_err_msg);
+
+    -- test 25: add a second active relation (fm4), then end-date the first → succeeds
+    INSERT INTO ClubMemberFamilyRelation
+        (membership_number, family_member_id, relationship_type, family_member_type, start_date)
+    VALUES (v_test_minor, 4, 'Grandmother', 'Secondary', '2024-01-01');
+
+    SET v_err_msg = NULL;
+    UPDATE ClubMemberFamilyRelation
+       SET end_date = DATE_SUB(CURDATE(), INTERVAL 1 DAY)
+     WHERE membership_number = v_test_minor AND family_member_id = 1 AND start_date = '2024-01-01';
+    INSERT INTO test_results VALUES
+        (25, 'End-dating family relation when another active one exists', 'SUCCESS', IF(v_err_msg IS NULL, 'SUCCESS', 'ERROR'),
+         IF(v_err_msg IS NULL, 'PASS', 'FAIL'), v_err_msg);
+
 END$$
+
+
 
 DELIMITER ;
 

@@ -6,7 +6,7 @@
 	dev-logs dev-logs-backend dev-logs-frontend \
 	remote-connect remote-schema remote-seed remote-setup \
 	remote-queries remote-verify remote-triggers remote-trigger-tests \
-	remote-email-event remote-email-test
+	remote-email-event remote-email-test open
 
 LOCAL  := ./scripts/local.sh
 REMOTE := ./scripts/remote.sh
@@ -17,6 +17,11 @@ REMOTE := ./scripts/remote.sh
 
 help: ## Show available targets
 	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z_-]+:.*##/ { printf "  \033[36m%-26s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0,5) }' $(MAKEFILE_LIST)
+
+##@ Open Application
+
+open: ## Open frontend application
+	open http://localhost:3000
 
 ##@ Local DB
 

@@ -15,13 +15,30 @@ export const relationshipTypeEnum = z.enum([
 
 export const familyMemberTypeEnum = z.enum(['Primary', 'Secondary']);
 
+const dateStringSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD');
+
+// Carries the linked-family-member data through to
+// sp_register_minor_club_member when the club member being created is a
+// minor. Whether it's actually required is a DB-trigger decision, not
+// re-validated here -- see trg_club_member_before_insert in 05_trigger.sql.
+const familyRelationForRegistrationSchema = z.object({
+  family_member_id: z.number().int().positive(),
+  relationship_type: relationshipTypeEnum,
+  family_member_type: familyMemberTypeEnum,
+  start_date: dateStringSchema,
+});
+
 const baseClubMemberFields = {
   location_id: z.number().int().positive(),
   first_name: z.string().min(1).max(50),
   last_name: z.string().min(1).max(50),
   date_of_birth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD'),
   gender: genderEnum,
-  registration_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD'),
+  registration_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD'),
   height_cm: z.number().positive().optional(),
   weight_kg: z.number().positive().optional(),
   ssn: z.string().max(15).optional(),
@@ -34,7 +51,10 @@ const baseClubMemberFields = {
   email: z.string().email().max(100).optional(),
 };
 
-export const createClubMemberSchema = z.object(baseClubMemberFields);
+export const createClubMemberSchema = z.object({
+  ...baseClubMemberFields,
+  family_relation: familyRelationForRegistrationSchema.optional(),
+});
 
 export const updateClubMemberSchema = z
   .object(baseClubMemberFields)
@@ -70,7 +90,10 @@ export const createFamilyRelationSchema = z.object({
   relationship_type: relationshipTypeEnum,
   family_member_type: familyMemberTypeEnum,
   start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD'),
-  end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD').optional(),
+  end_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD')
+    .optional(),
 });
 
 export const updateFamilyRelationSchema = createFamilyRelationSchema
@@ -85,12 +108,34 @@ export const memberRelationParamsSchema = z.object({
   relationId: z.coerce.number().int().positive(),
 });
 
+// Flat (non-nested) family-relation routes use only :relationId
+export const relationIdParamSchema = z.object({
+  relationId: z.coerce.number().int().positive(),
+});
+
+// Flat create — membership_number is part of the body, not the URL
+export const createFlatFamilyRelationSchema = z.object({
+  membership_number: z.number().int().positive(),
+  family_member_id: z.number().int().positive(),
+  relationship_type: relationshipTypeEnum,
+  family_member_type: familyMemberTypeEnum,
+  start_date: dateStringSchema,
+  end_date: dateStringSchema.optional(),
+});
+
 export type CreateClubMemberInput = z.infer<typeof createClubMemberSchema>;
 export type UpdateClubMemberInput = z.infer<typeof updateClubMemberSchema>;
 export type AddHobbyInput = z.infer<typeof addHobbySchema>;
 export type CreateHobbyInput = z.infer<typeof createHobbySchema>;
-export type CreateFamilyRelationInput = z.infer<typeof createFamilyRelationSchema>;
-export type UpdateFamilyRelationInput = z.infer<typeof updateFamilyRelationSchema>;
+export type CreateFamilyRelationInput = z.infer<
+  typeof createFamilyRelationSchema
+>;
+export type UpdateFamilyRelationInput = z.infer<
+  typeof updateFamilyRelationSchema
+>;
+export type CreateFlatFamilyRelationInput = z.infer<
+  typeof createFlatFamilyRelationSchema
+>;
 
 export interface ClubMember {
   membership_number: number;
