@@ -154,7 +154,8 @@ BEGIN
     END IF;
 END$$
 
--- 4) TeamFormation: no more than two teams in one session
+-- 4) TeamFormation: no more than two teams in one session, and both
+--    formations in a session must be the same boys/girls category.
 --    Exactly two is checked in 04_verify.sql because the first row must be
 --    allowed to exist while the second row is being inserted.
 CREATE TRIGGER trg_team_formation_before_insert
@@ -162,6 +163,7 @@ BEFORE INSERT ON TeamFormation
 FOR EACH ROW
 BEGIN
     DECLARE formation_count INT DEFAULT 0;
+    DECLARE sibling_category ENUM('Boys', 'Girls');
 
     SELECT COUNT(*) INTO formation_count
       FROM TeamFormation
@@ -171,6 +173,18 @@ BEGIN
         SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'A session can contain exactly two team formations; a third formation is not allowed.';
     END IF;
+
+    IF formation_count = 1 THEN
+        SELECT team_category INTO sibling_category
+          FROM TeamFormation
+         WHERE session_id = NEW.session_id
+         LIMIT 1;
+
+        IF sibling_category <> NEW.team_category THEN
+            SIGNAL SQLSTATE '45000'
+                SET MESSAGE_TEXT = 'Both team formations in a session must be the same category (Boys or Girls).';
+        END IF;
+    END IF;
 END$$
 
 CREATE TRIGGER trg_team_formation_before_update
@@ -178,6 +192,7 @@ BEFORE UPDATE ON TeamFormation
 FOR EACH ROW
 BEGIN
     DECLARE formation_count INT DEFAULT 0;
+    DECLARE sibling_category ENUM('Boys', 'Girls');
 
     IF NEW.session_id <> OLD.session_id THEN
         SELECT COUNT(*) INTO formation_count
@@ -188,6 +203,24 @@ BEGIN
         IF formation_count >= 2 THEN
             SIGNAL SQLSTATE '45000'
                 SET MESSAGE_TEXT = 'A session can contain exactly two team formations; a third formation is not allowed.';
+        END IF;
+    END IF;
+
+    SELECT COUNT(*) INTO formation_count
+      FROM TeamFormation
+     WHERE session_id = NEW.session_id
+       AND formation_id <> OLD.formation_id;
+
+    IF formation_count = 1 THEN
+        SELECT team_category INTO sibling_category
+          FROM TeamFormation
+         WHERE session_id = NEW.session_id
+           AND formation_id <> OLD.formation_id
+         LIMIT 1;
+
+        IF sibling_category <> NEW.team_category THEN
+            SIGNAL SQLSTATE '45000'
+                SET MESSAGE_TEXT = 'Both team formations in a session must be the same category (Boys or Girls).';
         END IF;
     END IF;
 END$$
