@@ -3,6 +3,10 @@
 
 USE wqc353_1;
 
+DROP TRIGGER IF EXISTS trg_location_before_insert;
+DROP TRIGGER IF EXISTS trg_location_before_update;
+DROP TRIGGER IF EXISTS trg_fifa_participation_before_insert;
+DROP TRIGGER IF EXISTS trg_fifa_participation_before_update;
 DROP TRIGGER IF EXISTS trg_club_member_before_insert;
 DROP TRIGGER IF EXISTS trg_club_member_before_update;
 DROP TRIGGER IF EXISTS trg_team_formation_assignment_before_insert;
@@ -435,7 +439,117 @@ BEGIN
                 SIGNAL SQLSTATE '45000'
                     SET MESSAGE_TEXT = 'Cannot update this family relation: a minor club member must always have at least one active linked family member.';
             END IF;
+
+-- 7) Location: at most one Head location club-wide
+CREATE TRIGGER trg_location_before_insert
+BEFORE INSERT ON Location
+FOR EACH ROW
+BEGIN
+    DECLARE head_count INT DEFAULT 0;
+
+    IF NEW.location_type = 'Head' THEN
+        SELECT COUNT(*) INTO head_count FROM Location WHERE location_type = 'Head';
+        IF head_count > 0 THEN
+            SIGNAL SQLSTATE '45000'
+                SET MESSAGE_TEXT = 'The club can only have one Head location.';
         END IF;
+    END IF;
+END$$
+
+CREATE TRIGGER trg_location_before_update
+BEFORE UPDATE ON Location
+FOR EACH ROW
+BEGIN
+    DECLARE head_count INT DEFAULT 0;
+
+    IF NEW.location_type = 'Head' AND OLD.location_type <> 'Head' THEN
+        SELECT COUNT(*) INTO head_count FROM Location
+         WHERE location_type = 'Head' AND location_id <> OLD.location_id;
+        IF head_count > 0 THEN
+            SIGNAL SQLSTATE '45000'
+                SET MESSAGE_TEXT = 'The club can only have one Head location.';
+        END IF;
+    END IF;
+END$$
+
+-- 8) FIFAParticipation: same eligibility rules as TeamFormationAssignment —
+--    fee paid for the game year; minors also need an active family relation.
+
+CREATE TRIGGER trg_fifa_participation_before_insert
+BEFORE INSERT ON FIFAParticipation
+FOR EACH ROW
+BEGIN
+    DECLARE game_dt DATE;
+    DECLARE member_dob DATE;
+    DECLARE paid_amount DECIMAL(10,2) DEFAULT 0;
+    DECLARE required_fee DECIMAL(10,2);
+    DECLARE family_count INT DEFAULT 0;
+
+    SELECT game_date INTO game_dt FROM FIFAGame WHERE game_id = NEW.game_id;
+    SELECT date_of_birth INTO member_dob FROM ClubMember WHERE membership_number = NEW.membership_number;
+
+    IF TIMESTAMPDIFF(YEAR, member_dob, game_dt) < 18 THEN
+        SET required_fee = 100.00;
+
+        SELECT COUNT(*) INTO family_count
+          FROM ClubMemberFamilyRelation cfr
+         WHERE cfr.membership_number = NEW.membership_number
+           AND cfr.start_date <= game_dt
+           AND (cfr.end_date IS NULL OR cfr.end_date >= game_dt);
+
+        IF family_count = 0 THEN
+            SIGNAL SQLSTATE '45000'
+                SET MESSAGE_TEXT = 'Minor club member must have a family member relationship active on the game date.';
+        END IF;
+    ELSE
+        SET required_fee = 200.00;
+    END IF;
+
+    SELECT COALESCE(SUM(amount), 0) INTO paid_amount FROM Payment
+     WHERE membership_number = NEW.membership_number AND membership_year = YEAR(game_dt);
+
+    IF paid_amount < required_fee THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Club member is not eligible: membership fee for the game year is not fully paid.';
+    END IF;
+END$$
+
+CREATE TRIGGER trg_fifa_participation_before_update
+BEFORE UPDATE ON FIFAParticipation
+FOR EACH ROW
+BEGIN
+    DECLARE game_dt DATE;
+    DECLARE member_dob DATE;
+    DECLARE paid_amount DECIMAL(10,2) DEFAULT 0;
+    DECLARE required_fee DECIMAL(10,2);
+    DECLARE family_count INT DEFAULT 0;
+
+    SELECT game_date INTO game_dt FROM FIFAGame WHERE game_id = NEW.game_id;
+    SELECT date_of_birth INTO member_dob FROM ClubMember WHERE membership_number = NEW.membership_number;
+
+    IF TIMESTAMPDIFF(YEAR, member_dob, game_dt) < 18 THEN
+        SET required_fee = 100.00;
+
+        SELECT COUNT(*) INTO family_count
+          FROM ClubMemberFamilyRelation cfr
+         WHERE cfr.membership_number = NEW.membership_number
+           AND cfr.start_date <= game_dt
+           AND (cfr.end_date IS NULL OR cfr.end_date >= game_dt);
+
+        IF family_count = 0 THEN
+            SIGNAL SQLSTATE '45000'
+                SET MESSAGE_TEXT = 'Minor club member must have a family member relationship active on the game date.';
+        END IF;
+    ELSE
+        SET required_fee = 200.00;
+    END IF;
+
+    SELECT COALESCE(SUM(amount), 0) INTO paid_amount FROM Payment
+     WHERE membership_number = NEW.membership_number AND membership_year = YEAR(game_dt);
+
+    IF paid_amount < required_fee THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Club member is not eligible: membership fee for the game year is not fully paid.';
     END IF;
 END$$
 
