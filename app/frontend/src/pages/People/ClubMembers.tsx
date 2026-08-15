@@ -4,15 +4,6 @@ import type { ClubMember, ClubMemberInput } from '../../types/member';
 import { clubMemberApi } from '../../services/members';
 const optional = (v: string | null) => v?.trim() || undefined;
 
-function isMinor(dateOfBirth: string, asOf: string): boolean {
-  const dob = new Date(dateOfBirth),
-    ref = new Date(asOf);
-  let age = ref.getFullYear() - dob.getFullYear();
-  const m = ref.getMonth() - dob.getMonth();
-  if (m < 0 || (m === 0 && ref.getDate() < dob.getDate())) age--;
-  return age < 18;
-}
-
 const toInput = (r: ClubMember): ClubMemberInput => ({
   location_id: Number(r.location_id),
   first_name: r.first_name.trim(),
@@ -32,10 +23,7 @@ const toInput = (r: ClubMember): ClubMemberInput => ({
   postal_code: optional(r.postal_code),
 });
 
-// Only used for newly-added rows: a minor can only be created via
-// sp_register_minor_club_member (see 05_trigger.sql), which requires the
-// linked family member fields -- so they're attached here, but never on
-// toUpdateInput, since family links are edited on the Family Members page.
+// family_relation is create-only; family links are managed on the Family Members page.
 const toCreateInput = (r: ClubMember): ClubMemberInput => {
   const base = toInput(r);
   if (!r.family_member_id) return base;
@@ -87,12 +75,6 @@ export default function ClubMembers() {
           !r.last_name.trim() ? 'Last name is required.' : '',
           !r.date_of_birth ? 'Date of birth is required.' : '',
           !r.location_id ? 'Location ID is required.' : '',
-          r.date_of_birth &&
-          r.registration_date &&
-          isMinor(r.date_of_birth, r.registration_date) &&
-          !r.family_member_id
-            ? 'Minor club members must have a Linked Family Member ID (the family member must already exist -- add them on the Family Members page first).'
-            : '',
         ].filter(Boolean)
       }
       toCreateInput={toCreateInput}

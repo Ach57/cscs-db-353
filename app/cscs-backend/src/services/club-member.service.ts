@@ -38,75 +38,46 @@ export async function createClubMember(
   input: CreateClubMemberInput,
 ): Promise<ClubMember> {
   const { family_relation, ...member } = input;
+  const memberValues = [
+    member.location_id, member.first_name, member.last_name, member.date_of_birth,
+    member.gender, member.registration_date,
+    member.height_cm ?? null, member.weight_kg ?? null,
+    member.ssn ?? null, member.medicare_number ?? null,
+    member.phone_number ?? null, member.address ?? null,
+    member.city ?? null, member.province ?? null,
+    member.postal_code ?? null, member.email ?? null,
+  ];
+  const conn = await pool.getConnection();
   try {
-    // trg_club_member_before_insert rejects a direct INSERT of a minor --
-    // the DB only allows a minor to be created via sp_register_minor_club_member,
-    // which inserts the ClubMember and its required ClubMemberFamilyRelation
-    // together in one transaction. See sql/05_trigger.sql.
-    if (family_relation) {
-      const [rows] = await pool.query<RowDataPacket[][]>(
-        `CALL sp_register_minor_club_member(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          member.location_id,
-          member.first_name,
-          member.last_name,
-          member.date_of_birth,
-          member.gender,
-          member.registration_date,
-          member.height_cm ?? null,
-          member.weight_kg ?? null,
-          member.ssn ?? null,
-          member.medicare_number ?? null,
-          member.phone_number ?? null,
-          member.address ?? null,
-          member.city ?? null,
-          member.province ?? null,
-          member.postal_code ?? null,
-          member.email ?? null,
-          family_relation.family_member_id,
-          family_relation.relationship_type,
-          family_relation.family_member_type,
-          family_relation.start_date,
-        ],
-      );
-      const membershipNumber = (rows[0][0] as { membership_number: number })
-        .membership_number;
-      return getClubMemberById(membershipNumber);
-    }
-
-    const [result] = await pool.query<ResultSetHeader>(
+    await conn.beginTransaction();
+    const [result] = await conn.query<ResultSetHeader>(
       `INSERT INTO ClubMember
          (location_id, first_name, last_name, date_of_birth, gender, registration_date,
           height_cm, weight_kg, ssn, medicare_number, phone_number,
           address, city, province, postal_code, email)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        member.location_id,
-        member.first_name,
-        member.last_name,
-        member.date_of_birth,
-        member.gender,
-        member.registration_date,
-        member.height_cm ?? null,
-        member.weight_kg ?? null,
-        member.ssn ?? null,
-        member.medicare_number ?? null,
-        member.phone_number ?? null,
-        member.address ?? null,
-        member.city ?? null,
-        member.province ?? null,
-        member.postal_code ?? null,
-        member.email ?? null,
-      ],
+      memberValues,
     );
-    return getClubMemberById(result.insertId);
-  } catch (err) {
-    if ((err as MysqlError).code === 'ER_DUP_ENTRY') {
-      throw new ConflictError(
-        'A club member with that SSN or medicare number already exists',
+    const id = result.insertId;
+    if (family_relation) {
+      await conn.query<ResultSetHeader>(
+        `INSERT INTO ClubMemberFamilyRelation
+           (membership_number, family_member_id, relationship_type, family_member_type, start_date)
+         VALUES (?, ?, ?, ?, ?)`,
+        [id, family_relation.family_member_id, family_relation.relationship_type,
+         family_relation.family_member_type, family_relation.start_date],
       );
     }
+    await conn.commit();
+    return getClubMemberById(id);
+  } catch (err) {
+    await conn.rollback();
+    if ((err as MysqlError).code === 'ER_DUP_ENTRY') {
+      throw new ConflictError('A club member with that SSN or medicare number already exists');
+    }
     throw err;
+  } finally {
+    conn.release();
   }
 }
 

@@ -5,13 +5,10 @@
 -- SIGNAL (via a CONTINUE HANDLER) instead of letting it abort the script,
 -- and logs one PASS/FAIL row per test into a results table.
 --
--- Tests 1-17 are inserted and then ROLLBACK'd, so nothing persists in the
--- real tables. Tests 18-21 (minor registration) call
--- sp_register_minor_club_member, which commits internally, so that section
--- instead cleans up its own rows explicitly at the end. Either way, the
--- results table is created ENGINE=MEMORY, which is non-transactional, so
--- it survives the tests 1-17 ROLLBACK and is still there for the final
--- SELECT and for you to screenshot.
+-- All tests run inside a single START TRANSACTION / ROLLBACK, so nothing
+-- persists in the real tables. The results table is created ENGINE=MEMORY,
+-- which is non-transactional, so it survives the ROLLBACK and is still
+-- there for the final SELECT and for you to screenshot.
 --
 -- A NULL trigger_message is expected (not an error) on every row where
 -- expected = SUCCESS: no SIGNAL means the CONTINUE HANDLER never ran, so
@@ -35,7 +32,6 @@ CREATE TEMPORARY TABLE test_results (
 ) ENGINE = MEMORY;
 
 DROP PROCEDURE IF EXISTS sp_run_trigger_tests;
-DROP PROCEDURE IF EXISTS sp_run_minor_registration_tests;
 
 DELIMITER $$
 
@@ -267,23 +263,11 @@ BEGIN
         (16, 'Same-day assignment >=3h apart', 'SUCCESS', IF(v_err_msg IS NULL, 'SUCCESS', 'ERROR'),
          IF(v_err_msg IS NULL, 'PASS', 'FAIL'), v_err_msg);
 
-    -- Minor with no family relation active on the *session* date, but fully
-    -- paid -> should still be rejected on the family-relation check.
-    --
-    -- sp_register_minor_club_member always creates an immediately-active
-    -- relation and manages its own transaction (COMMIT/ROLLBACK), which
-    -- can't be nested inside this procedure's enclosing transaction without
-    -- prematurely committing tests 1-16. So this fixture is built directly:
-    -- @cscs_allow_minor_insert is the same flag the procedure sets, and the
-    -- relation is given a start_date after the 2030 test session so it
-    -- isn't active yet on that date (while still satisfying the "a minor
-    -- must have a family relation" rule going forward).
-    SET @cscs_allow_minor_insert = 1;
+    -- Minor with a future-dated relation (not active on the 2030 session date) -> family-relation check rejects.
     INSERT INTO ClubMember
         (location_id, first_name, last_name, date_of_birth, gender, registration_date, ssn, medicare_number)
     VALUES
         (1, 'Test', 'MinorNoFamily', '2020-01-01', 'Male', '2024-01-01', 'TESTSSN006', 'TESTMED006');
-    SET @cscs_allow_minor_insert = 0;
     SET v_test_minor = LAST_INSERT_ID();
     INSERT INTO ClubMemberFamilyRelation
         (membership_number, family_member_id, relationship_type, family_member_type, start_date)
@@ -339,94 +323,59 @@ BEGIN
         (21, 'FIFA - minor without family relation blocked', 'ERROR', IF(v_err_msg IS NULL, 'SUCCESS', 'ERROR'),
          IF(v_err_msg IS NULL, 'FAIL', 'PASS'), v_err_msg);
 
+    -- ================================================================
+    -- 9) ClubMemberFamilyRelation: minor's last active relation cannot
+    --    be deleted or end-dated (trg_family_relation_before_delete /
+    --    trg_family_relation_before_update).
+    --    v_test_minor has one relation (fm1, start_date '2031-06-01'),
+    --    which is future-dated: 0 active relations on CURDATE.
+    -- ================================================================
+
+    -- test 22: delete the only relation → other_active = 0 → blocked
+    SET v_err_msg = NULL;
+    DELETE FROM ClubMemberFamilyRelation
+     WHERE membership_number = v_test_minor AND family_member_id = 1 AND start_date = '2031-06-01';
+    INSERT INTO test_results VALUES
+        (22, 'Delete last family relation of a minor blocked', 'ERROR', IF(v_err_msg IS NULL, 'SUCCESS', 'ERROR'),
+         IF(v_err_msg IS NULL, 'FAIL', 'PASS'), v_err_msg);
+
+    -- test 23: add a currently-active relation, then delete the future-dated one → succeeds
+    INSERT INTO ClubMemberFamilyRelation
+        (membership_number, family_member_id, relationship_type, family_member_type, start_date)
+    VALUES (v_test_minor, 1, 'Father', 'Primary', '2024-01-01');
+
+    SET v_err_msg = NULL;
+    DELETE FROM ClubMemberFamilyRelation
+     WHERE membership_number = v_test_minor AND family_member_id = 1 AND start_date = '2031-06-01';
+    INSERT INTO test_results VALUES
+        (23, 'Delete non-last family relation of a minor succeeds', 'SUCCESS', IF(v_err_msg IS NULL, 'SUCCESS', 'ERROR'),
+         IF(v_err_msg IS NULL, 'PASS', 'FAIL'), v_err_msg);
+
+    -- test 24: end-date the only active relation (fm1/'2024-01-01') → blocked
+    SET v_err_msg = NULL;
+    UPDATE ClubMemberFamilyRelation
+       SET end_date = DATE_SUB(CURDATE(), INTERVAL 1 DAY)
+     WHERE membership_number = v_test_minor AND family_member_id = 1 AND start_date = '2024-01-01';
+    INSERT INTO test_results VALUES
+        (24, 'End-dating last active family relation of a minor blocked', 'ERROR', IF(v_err_msg IS NULL, 'SUCCESS', 'ERROR'),
+         IF(v_err_msg IS NULL, 'FAIL', 'PASS'), v_err_msg);
+
+    -- test 25: add a second active relation (fm4), then end-date the first → succeeds
+    INSERT INTO ClubMemberFamilyRelation
+        (membership_number, family_member_id, relationship_type, family_member_type, start_date)
+    VALUES (v_test_minor, 4, 'Grandmother', 'Secondary', '2024-01-01');
+
+    SET v_err_msg = NULL;
+    UPDATE ClubMemberFamilyRelation
+       SET end_date = DATE_SUB(CURDATE(), INTERVAL 1 DAY)
+     WHERE membership_number = v_test_minor AND family_member_id = 1 AND start_date = '2024-01-01';
+    INSERT INTO test_results VALUES
+        (25, 'End-dating family relation when another active one exists', 'SUCCESS', IF(v_err_msg IS NULL, 'SUCCESS', 'ERROR'),
+         IF(v_err_msg IS NULL, 'PASS', 'FAIL'), v_err_msg);
+
 END$$
 
--- ================================================================
--- 7) ClubMember/ClubMemberFamilyRelation: a minor must be registered
---    with a linked family member already in the system.
---
---    sp_register_minor_club_member manages its own transaction (it
---    COMMITs), so it can't run inside sp_run_trigger_tests's enclosing
---    transaction without prematurely committing tests 1-16. This
---    procedure is therefore called plainly (no surrounding
---    START TRANSACTION/ROLLBACK) and cleans up its own rows at the end
---    instead of relying on a ROLLBACK to erase them.
--- ================================================================
-CREATE PROCEDURE sp_run_minor_registration_tests()
-BEGIN
-    DECLARE v_err_msg TEXT DEFAULT NULL;
-    DECLARE v_new_member INT DEFAULT NULL;
 
-    -- Section 1's simple `GET DIAGNOSTICS CONDITION 1` capture is enough
-    -- there because each of its statements runs cleanly (autocommit-free,
-    -- one open transaction for the whole run). Here, a statement that
-    -- fails while earlier MEMORY-table (test_results) writes are still
-    -- uncommitted makes MySQL raise extra HY000 warnings about not being
-    -- able to roll back the MEMORY table -- which can outrank our SIGNAL
-    -- as "condition 1". Fixed at the source below with a COMMIT after
-    -- every test_results write, so no risky statement ever runs with
-    -- uncommitted MEMORY-table history behind it; this capture can then
-    -- stay as simple as section 1's.
-    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
-    BEGIN
-        GET DIAGNOSTICS CONDITION 1 v_err_msg = MESSAGE_TEXT;
-    END;
-
-    -- direct INSERT of a minor is rejected
-    SET v_err_msg = NULL;
-    INSERT INTO ClubMember
-        (location_id, first_name, last_name, date_of_birth, gender, registration_date, ssn, medicare_number)
-    VALUES
-        (1, 'Test', 'DirectMinorReject', '2018-01-01', 'Male', '2026-08-11', 'TESTSSN007', 'TESTMED007');
-    INSERT INTO test_results VALUES
-        (18, 'Direct INSERT of a minor club member is rejected', 'ERROR',
-         IF(v_err_msg IS NULL, 'SUCCESS', 'ERROR'), IF(v_err_msg IS NULL, 'FAIL', 'PASS'), v_err_msg);
-    COMMIT;
-
-    -- sp_register_minor_club_member rejects a family_member_id that doesn't exist
-    SET v_err_msg = NULL;
-    CALL sp_register_minor_club_member(
-        1, 'Test', 'BadFamilyReject', '2018-01-01', 'Male', '2026-08-11',
-        NULL, NULL, 'TESTSSN008', 'TESTMED008', NULL, NULL, NULL, NULL, NULL, NULL,
-        999999, 'Father', 'Primary', '2026-08-11'
-    );
-    INSERT INTO test_results VALUES
-        (19, 'sp_register_minor_club_member rejects a nonexistent family member', 'ERROR',
-         IF(v_err_msg IS NULL, 'SUCCESS', 'ERROR'), IF(v_err_msg IS NULL, 'FAIL', 'PASS'), v_err_msg);
-    COMMIT;
-
-    -- sp_register_minor_club_member succeeds with a valid family member,
-    -- creating the ClubMember and its ClubMemberFamilyRelation together.
-    SET v_err_msg = NULL;
-    CALL sp_register_minor_club_member(
-        1, 'Test', 'GoodFamilyAccept', '2018-01-01', 'Male', '2026-08-11',
-        NULL, NULL, 'TESTSSN009', 'TESTMED009', NULL, NULL, NULL, NULL, NULL, NULL,
-        1, 'Grandmother', 'Secondary', '2026-08-11'
-    );
-    SET v_new_member = @cscs_last_minor_membership_number;
-    INSERT INTO test_results VALUES
-        (20, 'sp_register_minor_club_member succeeds with a valid family member', 'SUCCESS',
-         IF(v_err_msg IS NULL, 'SUCCESS', 'ERROR'), IF(v_err_msg IS NULL, 'PASS', 'FAIL'), v_err_msg);
-    COMMIT;
-
-    -- deleting that minor's only active family relation is rejected
-    SET v_err_msg = NULL;
-    DELETE FROM ClubMemberFamilyRelation WHERE membership_number = v_new_member;
-    INSERT INTO test_results VALUES
-        (21, 'Deleting a minor''s only active family relation is rejected', 'ERROR',
-         IF(v_err_msg IS NULL, 'SUCCESS', 'ERROR'), IF(v_err_msg IS NULL, 'FAIL', 'PASS'), v_err_msg);
-    COMMIT;
-
-    -- Cleanup: these rows are real commits (the procedure manages its own
-    -- transaction), so age the test 20 member up to an adult first --
-    -- otherwise the delete-guard trigger just proven in test 21 blocks
-    -- removing their only relation.
-    IF v_new_member IS NOT NULL THEN
-        UPDATE ClubMember SET date_of_birth = '2000-01-01' WHERE membership_number = v_new_member;
-        DELETE FROM ClubMemberFamilyRelation WHERE membership_number = v_new_member;
-        DELETE FROM ClubMember WHERE membership_number = v_new_member;
-    END IF;
-END$$
 
 DELIMITER ;
 
@@ -435,9 +384,6 @@ CALL sp_run_trigger_tests();
 ROLLBACK;
 
 DROP PROCEDURE sp_run_trigger_tests;
-
-CALL sp_run_minor_registration_tests();
-DROP PROCEDURE sp_run_minor_registration_tests;
 
 SELECT * FROM test_results ORDER BY test_id;
 

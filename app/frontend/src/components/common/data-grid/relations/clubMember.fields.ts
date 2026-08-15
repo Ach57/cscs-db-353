@@ -55,7 +55,7 @@ export const clubMemberFields: ColDef<ClubMember>[] = [
   },
   {
     field: 'family_member_id',
-    headerName: 'Linked Family Member ID (minors only)',
+    headerName: 'Linked Family Member ID',
     minWidth: 220,
     filter: 'agNumberColumnFilter',
   },
