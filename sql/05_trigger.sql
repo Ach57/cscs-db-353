@@ -439,6 +439,8 @@ BEGIN
                 SIGNAL SQLSTATE '45000'
                     SET MESSAGE_TEXT = 'Cannot update this family relation: a minor club member must always have at least one active linked family member.';
             END IF;
+        END IF;
+END$$
 
 -- 7) Location: at most one Head location club-wide
 CREATE TRIGGER trg_location_before_insert

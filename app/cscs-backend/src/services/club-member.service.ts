@@ -34,7 +34,9 @@ export async function getClubMemberById(id: number): Promise<ClubMember> {
   return rows[0];
 }
 
-export async function createClubMember(input: CreateClubMemberInput): Promise<ClubMember> {
+export async function createClubMember(
+  input: CreateClubMemberInput,
+): Promise<ClubMember> {
   const { family_relation, ...member } = input;
   try {
     // trg_club_member_before_insert rejects a direct INSERT of a minor --
@@ -45,18 +47,30 @@ export async function createClubMember(input: CreateClubMemberInput): Promise<Cl
       const [rows] = await pool.query<RowDataPacket[][]>(
         `CALL sp_register_minor_club_member(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
-          member.location_id, member.first_name, member.last_name, member.date_of_birth,
-          member.gender, member.registration_date,
-          member.height_cm ?? null, member.weight_kg ?? null,
-          member.ssn ?? null, member.medicare_number ?? null,
-          member.phone_number ?? null, member.address ?? null,
-          member.city ?? null, member.province ?? null,
-          member.postal_code ?? null, member.email ?? null,
-          family_relation.family_member_id, family_relation.relationship_type,
-          family_relation.family_member_type, family_relation.start_date,
+          member.location_id,
+          member.first_name,
+          member.last_name,
+          member.date_of_birth,
+          member.gender,
+          member.registration_date,
+          member.height_cm ?? null,
+          member.weight_kg ?? null,
+          member.ssn ?? null,
+          member.medicare_number ?? null,
+          member.phone_number ?? null,
+          member.address ?? null,
+          member.city ?? null,
+          member.province ?? null,
+          member.postal_code ?? null,
+          member.email ?? null,
+          family_relation.family_member_id,
+          family_relation.relationship_type,
+          family_relation.family_member_type,
+          family_relation.start_date,
         ],
       );
-      const membershipNumber = (rows[0][0] as { membership_number: number }).membership_number;
+      const membershipNumber = (rows[0][0] as { membership_number: number })
+        .membership_number;
       return getClubMemberById(membershipNumber);
     }
 
@@ -67,19 +81,30 @@ export async function createClubMember(input: CreateClubMemberInput): Promise<Cl
           address, city, province, postal_code, email)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        member.location_id, member.first_name, member.last_name, member.date_of_birth,
-        member.gender, member.registration_date,
-        member.height_cm ?? null, member.weight_kg ?? null,
-        member.ssn ?? null, member.medicare_number ?? null,
-        member.phone_number ?? null, member.address ?? null,
-        member.city ?? null, member.province ?? null,
-        member.postal_code ?? null, member.email ?? null,
+        member.location_id,
+        member.first_name,
+        member.last_name,
+        member.date_of_birth,
+        member.gender,
+        member.registration_date,
+        member.height_cm ?? null,
+        member.weight_kg ?? null,
+        member.ssn ?? null,
+        member.medicare_number ?? null,
+        member.phone_number ?? null,
+        member.address ?? null,
+        member.city ?? null,
+        member.province ?? null,
+        member.postal_code ?? null,
+        member.email ?? null,
       ],
     );
     return getClubMemberById(result.insertId);
   } catch (err) {
     if ((err as MysqlError).code === 'ER_DUP_ENTRY') {
-      throw new ConflictError('A club member with that SSN or medicare number already exists');
+      throw new ConflictError(
+        'A club member with that SSN or medicare number already exists',
+      );
     }
     throw err;
   }
@@ -100,7 +125,9 @@ export async function updateClubMember(
     );
   } catch (err) {
     if ((err as MysqlError).code === 'ER_DUP_ENTRY') {
-      throw new ConflictError('A club member with that SSN or medicare number already exists');
+      throw new ConflictError(
+        'A club member with that SSN or medicare number already exists',
+      );
     }
     throw err;
   }
@@ -137,7 +164,9 @@ export async function createHobby(input: CreateHobbyInput): Promise<Hobby> {
     return rows[0];
   } catch (err) {
     if ((err as MysqlError).code === 'ER_DUP_ENTRY') {
-      throw new ConflictError(`A hobby named "${input.hobby_name}" already exists`);
+      throw new ConflictError(
+        `A hobby named "${input.hobby_name}" already exists`,
+      );
     }
     throw err;
   }
@@ -149,12 +178,16 @@ export async function deleteHobby(hobbyId: number): Promise<void> {
     [hobbyId],
   );
   if (!existing[0]) throw new NotFoundError('Hobby', hobbyId);
-  await pool.query<ResultSetHeader>('DELETE FROM Hobby WHERE hobby_id = ?', [hobbyId]);
+  await pool.query<ResultSetHeader>('DELETE FROM Hobby WHERE hobby_id = ?', [
+    hobbyId,
+  ]);
 }
 
 // ── Member–Hobby relations ───────────────────────────────────────────────────
 
-export async function getMemberHobbies(membershipNumber: number): Promise<Hobby[]> {
+export async function getMemberHobbies(
+  membershipNumber: number,
+): Promise<Hobby[]> {
   await getClubMemberById(membershipNumber);
   const [rows] = await pool.query<(Hobby & RowDataPacket)[]>(
     `SELECT h.*
@@ -212,7 +245,9 @@ export async function getMemberFamilyRelations(
   membershipNumber: number,
 ): Promise<ClubMemberFamilyRelationWithName[]> {
   await getClubMemberById(membershipNumber);
-  const [rows] = await pool.query<(ClubMemberFamilyRelationWithName & RowDataPacket)[]>(
+  const [rows] = await pool.query<
+    (ClubMemberFamilyRelationWithName & RowDataPacket)[]
+  >(
     `SELECT cfr.*, fm.first_name, fm.last_name
      FROM ClubMemberFamilyRelation cfr
      JOIN FamilyMember fm ON fm.family_member_id = cfr.family_member_id
@@ -235,11 +270,17 @@ export async function createFamilyRelation(
           family_member_type, start_date, end_date)
        VALUES (?, ?, ?, ?, ?, ?)`,
       [
-        membershipNumber, input.family_member_id, input.relationship_type,
-        input.family_member_type, input.start_date, input.end_date ?? null,
+        membershipNumber,
+        input.family_member_id,
+        input.relationship_type,
+        input.family_member_type,
+        input.start_date,
+        input.end_date ?? null,
       ],
     );
-    const [rows] = await pool.query<(ClubMemberFamilyRelationWithName & RowDataPacket)[]>(
+    const [rows] = await pool.query<
+      (ClubMemberFamilyRelationWithName & RowDataPacket)[]
+    >(
       `SELECT cfr.*, fm.first_name, fm.last_name
        FROM ClubMemberFamilyRelation cfr
        JOIN FamilyMember fm ON fm.family_member_id = cfr.family_member_id
@@ -283,7 +324,9 @@ export async function updateFamilyRelation(
     }
     throw err;
   }
-  const [rows] = await pool.query<(ClubMemberFamilyRelationWithName & RowDataPacket)[]>(
+  const [rows] = await pool.query<
+    (ClubMemberFamilyRelationWithName & RowDataPacket)[]
+  >(
     `SELECT cfr.*, fm.first_name, fm.last_name
      FROM ClubMemberFamilyRelation cfr
      JOIN FamilyMember fm ON fm.family_member_id = cfr.family_member_id

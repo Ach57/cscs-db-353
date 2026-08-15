@@ -15,7 +15,9 @@ export const relationshipTypeEnum = z.enum([
 
 export const familyMemberTypeEnum = z.enum(['Primary', 'Secondary']);
 
-const dateStringSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD');
+const dateStringSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD');
 
 // Carries the linked-family-member data through to
 // sp_register_minor_club_member when the club member being created is a
@@ -34,7 +36,9 @@ const baseClubMemberFields = {
   last_name: z.string().min(1).max(50),
   date_of_birth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD'),
   gender: genderEnum,
-  registration_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD'),
+  registration_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD'),
   height_cm: z.number().positive().optional(),
   weight_kg: z.number().positive().optional(),
   ssn: z.string().max(15).optional(),
@@ -86,7 +90,10 @@ export const createFamilyRelationSchema = z.object({
   relationship_type: relationshipTypeEnum,
   family_member_type: familyMemberTypeEnum,
   start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD'),
-  end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD').optional(),
+  end_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD')
+    .optional(),
 });
 
 export const updateFamilyRelationSchema = createFamilyRelationSchema
@@ -105,8 +112,12 @@ export type CreateClubMemberInput = z.infer<typeof createClubMemberSchema>;
 export type UpdateClubMemberInput = z.infer<typeof updateClubMemberSchema>;
 export type AddHobbyInput = z.infer<typeof addHobbySchema>;
 export type CreateHobbyInput = z.infer<typeof createHobbySchema>;
-export type CreateFamilyRelationInput = z.infer<typeof createFamilyRelationSchema>;
-export type UpdateFamilyRelationInput = z.infer<typeof updateFamilyRelationSchema>;
+export type CreateFamilyRelationInput = z.infer<
+  typeof createFamilyRelationSchema
+>;
+export type UpdateFamilyRelationInput = z.infer<
+  typeof updateFamilyRelationSchema
+>;
 
 export interface ClubMember {
   membership_number: number;
