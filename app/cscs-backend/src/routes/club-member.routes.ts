@@ -6,6 +6,7 @@ import {
   membershipNumberParamSchema,
   memberHobbyParamsSchema,
   memberRelationParamsSchema,
+  relationIdParamSchema,
   hobbyIdParamSchema,
   createClubMemberSchema,
   updateClubMemberSchema,
@@ -13,9 +14,29 @@ import {
   createHobbySchema,
   createFamilyRelationSchema,
   updateFamilyRelationSchema,
+  createFlatFamilyRelationSchema,
 } from '../types/club-member.types';
 
 const router = Router();
+
+// ── Flat family-relations CRUD (must be defined before /:id routes) ─────────────
+router.get('/family-relations', asyncHandler(controller.getAllFamilyRelationsFlat));
+router.post(
+  '/family-relations',
+  validate(createFlatFamilyRelationSchema),
+  asyncHandler(controller.createFlatFamilyRelation),
+);
+router.put(
+  '/family-relations/:relationId',
+  validate(relationIdParamSchema, 'params'),
+  validate(updateFamilyRelationSchema),
+  asyncHandler(controller.updateFamilyRelation),
+);
+router.delete(
+  '/family-relations/:relationId',
+  validate(relationIdParamSchema, 'params'),
+  asyncHandler(controller.removeFamilyRelation),
+);
 
 // ── Club Members CRUD ─────────────────────────────────────────────────────────
 router.get('/', asyncHandler(controller.getAll));

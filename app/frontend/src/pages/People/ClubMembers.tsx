@@ -23,21 +23,6 @@ const toInput = (r: ClubMember): ClubMemberInput => ({
   postal_code: optional(r.postal_code),
 });
 
-// family_relation is create-only; family links are managed on the Family Members page.
-const toCreateInput = (r: ClubMember): ClubMemberInput => {
-  const base = toInput(r);
-  if (!r.family_member_id) return base;
-  return {
-    ...base,
-    family_relation: {
-      family_member_id: Number(r.family_member_id),
-      relationship_type: r.relationship_type || 'Other',
-      family_member_type: r.family_member_type || 'Primary',
-      start_date: r.registration_date,
-    },
-  };
-};
-
 export default function ClubMembers() {
   return (
     <RelationPage<ClubMember, ClubMemberInput, Partial<ClubMemberInput>>
@@ -65,9 +50,6 @@ export default function ClubMembers() {
         city: null,
         province: 'QC',
         postal_code: null,
-        family_member_id: null,
-        relationship_type: null,
-        family_member_type: null,
       })}
       validateRow={(r) =>
         [
@@ -77,7 +59,7 @@ export default function ClubMembers() {
           !r.location_id ? 'Location ID is required.' : '',
         ].filter(Boolean)
       }
-      toCreateInput={toCreateInput}
+      toCreateInput={toInput}
       toUpdateInput={toInput}
     />
   );

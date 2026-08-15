@@ -108,6 +108,21 @@ export const memberRelationParamsSchema = z.object({
   relationId: z.coerce.number().int().positive(),
 });
 
+// Flat (non-nested) family-relation routes use only :relationId
+export const relationIdParamSchema = z.object({
+  relationId: z.coerce.number().int().positive(),
+});
+
+// Flat create — membership_number is part of the body, not the URL
+export const createFlatFamilyRelationSchema = z.object({
+  membership_number: z.number().int().positive(),
+  family_member_id: z.number().int().positive(),
+  relationship_type: relationshipTypeEnum,
+  family_member_type: familyMemberTypeEnum,
+  start_date: dateStringSchema,
+  end_date: dateStringSchema.optional(),
+});
+
 export type CreateClubMemberInput = z.infer<typeof createClubMemberSchema>;
 export type UpdateClubMemberInput = z.infer<typeof updateClubMemberSchema>;
 export type AddHobbyInput = z.infer<typeof addHobbySchema>;
@@ -117,6 +132,9 @@ export type CreateFamilyRelationInput = z.infer<
 >;
 export type UpdateFamilyRelationInput = z.infer<
   typeof updateFamilyRelationSchema
+>;
+export type CreateFlatFamilyRelationInput = z.infer<
+  typeof createFlatFamilyRelationSchema
 >;
 
 export interface ClubMember {

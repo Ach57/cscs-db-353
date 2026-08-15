@@ -56,13 +56,6 @@ export interface ClubMember {
   city: string | null;
   province: string | null;
   postal_code: string | null;
-  // Transient, grid-only fields used to link a family member when
-  // registering a minor -- never returned by GET /club-members, and
-  // ignored on update (family links are managed on the Family Members
-  // page). See ClubMemberInput.family_relation.
-  family_member_id?: number | null;
-  relationship_type?: RelationshipType | null;
-  family_member_type?: FamilyMemberType | null;
 }
 
 export interface ClubMemberInput {
@@ -82,23 +75,25 @@ export interface ClubMemberInput {
   city?: string;
   province?: string;
   postal_code?: string;
-  // Required by the database when the member being created is a minor --
-  // trg_club_member_before_insert rejects a minor's INSERT unless it goes
-  // through sp_register_minor_club_member, which this field triggers.
-  family_relation?: {
-    family_member_id: number;
-    relationship_type: RelationshipType;
-    family_member_type: FamilyMemberType;
-    start_date: string;
-  };
 }
 
 export interface FamilyRelation {
   relation_id: number;
   membership_number: number;
   family_member_id: number;
+  first_name: string;
+  last_name: string;
   relationship_type: RelationshipType;
+  family_member_type: FamilyMemberType;
   start_date: string;
   end_date: string | null;
-  is_primary: boolean;
+}
+
+export interface FamilyRelationInput {
+  membership_number: number;
+  family_member_id: number;
+  relationship_type: RelationshipType;
+  family_member_type: FamilyMemberType;
+  start_date: string;
+  end_date?: string;
 }

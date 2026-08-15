@@ -9,6 +9,7 @@ import {
   CreateHobbyInput,
   CreateFamilyRelationInput,
   UpdateFamilyRelationInput,
+  CreateFlatFamilyRelationInput,
 } from '../types/club-member.types';
 import { NotFoundError, ConflictError } from '../utils/AppError';
 
@@ -211,6 +212,53 @@ export async function removeMemberHobby(
 }
 
 // ── Family relations ─────────────────────────────────────────────────────────
+
+export async function getAllFamilyRelations(): Promise<ClubMemberFamilyRelationWithName[]> {
+  const [rows] = await pool.query<(ClubMemberFamilyRelationWithName & RowDataPacket)[]>(
+    `SELECT cfr.*, fm.first_name, fm.last_name
+     FROM ClubMemberFamilyRelation cfr
+     JOIN FamilyMember fm ON fm.family_member_id = cfr.family_member_id
+     ORDER BY cfr.membership_number, cfr.start_date DESC`,
+  );
+  return rows;
+}
+
+export async function createFlatFamilyRelation(
+  input: CreateFlatFamilyRelationInput,
+): Promise<ClubMemberFamilyRelationWithName> {
+  await getClubMemberById(input.membership_number);
+  try {
+    const [result] = await pool.query<ResultSetHeader>(
+      `INSERT INTO ClubMemberFamilyRelation
+         (membership_number, family_member_id, relationship_type,
+          family_member_type, start_date, end_date)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [
+        input.membership_number,
+        input.family_member_id,
+        input.relationship_type,
+        input.family_member_type,
+        input.start_date,
+        input.end_date ?? null,
+      ],
+    );
+    const [rows] = await pool.query<(ClubMemberFamilyRelationWithName & RowDataPacket)[]>(
+      `SELECT cfr.*, fm.first_name, fm.last_name
+       FROM ClubMemberFamilyRelation cfr
+       JOIN FamilyMember fm ON fm.family_member_id = cfr.family_member_id
+       WHERE cfr.relation_id = ?`,
+      [result.insertId],
+    );
+    return rows[0];
+  } catch (err) {
+    if ((err as MysqlError).code === 'ER_DUP_ENTRY') {
+      throw new ConflictError(
+        'A relation for this member, family member, and start date already exists',
+      );
+    }
+    throw err;
+  }
+}
 
 export async function getMemberFamilyRelations(
   membershipNumber: number,

@@ -7,6 +7,7 @@ import {
   CreateHobbyInput,
   CreateFamilyRelationInput,
   UpdateFamilyRelationInput,
+  CreateFlatFamilyRelationInput,
 } from '../types/club-member.types';
 
 // ── Club Members ─────────────────────────────────────────────────────────────
@@ -82,7 +83,16 @@ export const removeMemberHobby = async (req: Request, res: Response) => {
 };
 
 // ── Family relations ─────────────────────────────────────────────────────────
+export const getAllFamilyRelationsFlat = async (_req: Request, res: Response) => {
+  const data = await clubMemberService.getAllFamilyRelations();
+  res.json({ success: true, data });
+};
 
+export const createFlatFamilyRelation = async (req: Request, res: Response) => {
+  const input = req.validated!.body as CreateFlatFamilyRelationInput;
+  const data = await clubMemberService.createFlatFamilyRelation(input);
+  res.status(201).json({ success: true, data });
+};
 export const getFamilyRelations = async (req: Request, res: Response) => {
   const { id } = req.validated!.params as { id: number };
   const data = await clubMemberService.getMemberFamilyRelations(id);
