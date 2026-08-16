@@ -52,7 +52,10 @@ export const personnelAssignmentParamsSchema = z.object({
 export const createPersonnelAssignmentSchema = z.object({
   location_id: z.number().int().positive(),
   start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD'),
-  end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD').optional(),
+  end_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD')
+    .optional(),
 });
 
 export const updatePersonnelAssignmentSchema = createPersonnelAssignmentSchema
@@ -61,10 +64,32 @@ export const updatePersonnelAssignmentSchema = createPersonnelAssignmentSchema
     message: 'At least one field must be provided',
   });
 
+export const createPersonnelAssignmentFlatSchema = z.object({
+  personnel_id: z.number().int().positive(),
+  location_id: z.number().int().positive(),
+  start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD'),
+  end_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD')
+    .nullable()
+    .optional(),
+});
+
+export const personnelAssignmentIdParamSchema = z.object({
+  assignmentId: z.coerce.number().int().positive(),
+});
+
 export type CreatePersonnelInput = z.infer<typeof createPersonnelSchema>;
 export type UpdatePersonnelInput = z.infer<typeof updatePersonnelSchema>;
-export type CreatePersonnelAssignmentInput = z.infer<typeof createPersonnelAssignmentSchema>;
-export type UpdatePersonnelAssignmentInput = z.infer<typeof updatePersonnelAssignmentSchema>;
+export type CreatePersonnelAssignmentInput = z.infer<
+  typeof createPersonnelAssignmentSchema
+>;
+export type UpdatePersonnelAssignmentInput = z.infer<
+  typeof updatePersonnelAssignmentSchema
+>;
+export type CreatePersonnelAssignmentFlatInput = z.infer<
+  typeof createPersonnelAssignmentFlatSchema
+>;
 
 export interface Personnel {
   personnel_id: number;

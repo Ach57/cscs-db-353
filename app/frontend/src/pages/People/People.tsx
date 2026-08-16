@@ -1,5 +1,12 @@
 import { useSearchParams } from 'react-router-dom';
-import { ShieldUser, UserRound, UsersRound, Users } from 'lucide-react';
+import {
+  ShieldUser,
+  UserRound,
+  UsersRound,
+  Users,
+  UserStar,
+  UserCheck,
+} from 'lucide-react';
 import WorkspaceTabs, {
   type WorkspaceTabItem,
 } from '../../components/common/WorkspaceTabs';
@@ -7,12 +14,16 @@ import Personnel from './Personnel';
 import FamilyMembers from './FamilyMembers';
 import ClubMembers from './ClubMembers';
 import ClubMembersFamilyRelation from './ClubMembersFamilyRelation';
+import PersonnelAssignmentsOverview from './PersonnelAssignment';
+import FamilyMemberAssignmentOverview from './FamilyMemberAssignment';
 
 type PeopleTab =
   | 'personnel'
   | 'family-members'
   | 'club-members'
-  | 'club-members-family-relation';
+  | 'club-members-family-relation'
+  | 'personnel-assignment'
+  | 'family-member-assignment';
 
 const tabs: WorkspaceTabItem<PeopleTab>[] = [
   {
@@ -38,6 +49,20 @@ const tabs: WorkspaceTabItem<PeopleTab>[] = [
     label: 'Club Members Family Relation',
     description: 'Family members relationship to the club members',
     icon: Users,
+  },
+  {
+    id: 'personnel-assignment',
+    label: 'Personnel Assignments',
+    description:
+      'Assignment of personnel by location id, start and ending date',
+    icon: UserStar,
+  },
+  {
+    id: 'family-member-assignment',
+    label: 'Family Member Assignment',
+    description:
+      'Family Member Assignments per location id, start and ending date.',
+    icon: UserCheck,
   },
 ];
 
@@ -71,6 +96,12 @@ export default function People() {
         {activeTab === 'club-members' && <ClubMembers />}
         {activeTab === 'club-members-family-relation' && (
           <ClubMembersFamilyRelation />
+        )}
+        {activeTab === 'personnel-assignment' && (
+          <PersonnelAssignmentsOverview />
+        )}
+        {activeTab === 'family-member-assignment' && (
+          <FamilyMemberAssignmentOverview />
         )}
       </div>
     </section>

@@ -45,10 +45,27 @@ export const updateFamilyMemberAssignmentSchema = createFamilyMemberAssignmentSc
     message: 'At least one field must be provided',
   });
 
+// Flat (non-nested) schemas for the /family-members-assignment resource
+export const createFamilyMemberAssignmentFlatSchema = z.object({
+  family_member_id: z.number().int().positive(),
+  location_id: z.number().int().positive(),
+  start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD'),
+  end_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD')
+    .nullable()
+    .optional(),
+});
+
+export const familyMemberAssignmentIdParamSchema = z.object({
+  assignmentId: z.coerce.number().int().positive(),
+});
+
 export type CreateFamilyMemberInput = z.infer<typeof createFamilyMemberSchema>;
 export type UpdateFamilyMemberInput = z.infer<typeof updateFamilyMemberSchema>;
 export type CreateFamilyMemberAssignmentInput = z.infer<typeof createFamilyMemberAssignmentSchema>;
 export type UpdateFamilyMemberAssignmentInput = z.infer<typeof updateFamilyMemberAssignmentSchema>;
+export type CreateFamilyMemberAssignmentFlatInput = z.infer<typeof createFamilyMemberAssignmentFlatSchema>;
 
 export interface FamilyMember {
   family_member_id: number;
