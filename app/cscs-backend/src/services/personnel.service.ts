@@ -7,6 +7,7 @@ import {
   UpdatePersonnelInput,
   CreatePersonnelAssignmentInput,
   UpdatePersonnelAssignmentInput,
+  CreatePersonnelAssignmentFlatInput,
 } from '../types/personnel.types';
 import { NotFoundError, ConflictError } from '../utils/AppError';
 
@@ -79,6 +80,16 @@ export async function deletePersonnel(id: number): Promise<void> {
   await pool.query<ResultSetHeader>('DELETE FROM Personnel WHERE personnel_id = ?', [id]);
 }
 
+export async function getAllPersonnelAssignments(): Promise<PersonnelAssignmentWithLocation[]> {
+  const [rows] = await pool.query<(PersonnelAssignmentWithLocation & RowDataPacket)[]>(
+    `SELECT pa.*, l.name AS location_name
+     FROM PersonnelAssignment pa
+     JOIN Location l ON l.location_id = pa.location_id
+     ORDER BY pa.start_date DESC`,
+  );
+  return rows;
+}
+
 export async function getPersonnelAssignments(
   personnelId: number,
 ): Promise<PersonnelAssignmentWithLocation[]> {
@@ -92,6 +103,33 @@ export async function getPersonnelAssignments(
     [personnelId],
   );
   return rows;
+}
+
+export async function createPersonnelAssignmentFlat(
+  input: CreatePersonnelAssignmentFlatInput,
+): Promise<PersonnelAssignmentWithLocation> {
+  try {
+    const [result] = await pool.query<ResultSetHeader>(
+      `INSERT INTO PersonnelAssignment (personnel_id, location_id, start_date, end_date)
+       VALUES (?, ?, ?, ?)`,
+      [input.personnel_id, input.location_id, input.start_date, input.end_date ?? null],
+    );
+    const [rows] = await pool.query<(PersonnelAssignmentWithLocation & RowDataPacket)[]>(
+      `SELECT pa.*, l.name AS location_name
+       FROM PersonnelAssignment pa
+       JOIN Location l ON l.location_id = pa.location_id
+       WHERE pa.assignment_id = ?`,
+      [result.insertId],
+    );
+    return rows[0];
+  } catch (err) {
+    if ((err as MysqlError).code === 'ER_DUP_ENTRY') {
+      throw new ConflictError(
+        'An assignment for this personnel, location, and start date already exists',
+      );
+    }
+    throw err;
+  }
 }
 
 export async function createPersonnelAssignment(

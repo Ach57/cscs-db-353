@@ -14,8 +14,16 @@ import {
 const router = Router();
 
 router.get('/', asyncHandler(controller.getAll));
-router.get('/:id', validate(familyMemberIdParamSchema, 'params'), asyncHandler(controller.getOne));
-router.post('/', validate(createFamilyMemberSchema), asyncHandler(controller.create));
+router.get(
+  '/:id',
+  validate(familyMemberIdParamSchema, 'params'),
+  asyncHandler(controller.getOne),
+);
+router.post(
+  '/',
+  validate(createFamilyMemberSchema),
+  asyncHandler(controller.create),
+);
 router.put(
   '/:id',
   validate(familyMemberIdParamSchema, 'params'),
@@ -28,7 +36,6 @@ router.delete(
   asyncHandler(controller.remove),
 );
 
-// ── Assignments sub-resource ──────────────────────────────────────────────────
 router.get(
   '/:id/assignments',
   validate(familyMemberIdParamSchema, 'params'),
