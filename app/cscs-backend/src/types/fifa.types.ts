@@ -41,6 +41,8 @@ export interface FIFAGame {
   game_date: string;
   team_score: number;
   opponent_score: number;
+  location_name?: string;
+  participant_count?: number;
 }
 
 export interface FIFAParticipant {
@@ -52,4 +54,15 @@ export interface FIFAParticipant {
 
 export interface FIFAGameWithParticipants extends FIFAGame {
   participants: FIFAParticipant[];
+}
+
+
+export interface FIFAParticipantOverview {
+  membership_number: number;
+  first_name: string;
+  last_name: string;
+  location_id: number;
+  location_name: string;
+  fifa_game_count: number;
+  fifa_games: string | null;
 }
