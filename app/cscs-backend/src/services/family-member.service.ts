@@ -7,6 +7,7 @@ import {
   UpdateFamilyMemberInput,
   CreateFamilyMemberAssignmentInput,
   UpdateFamilyMemberAssignmentInput,
+  CreateFamilyMemberAssignmentFlatInput,
 } from '../types/family-member.types';
 import { NotFoundError, ConflictError } from '../utils/AppError';
 
@@ -84,6 +85,16 @@ export async function deleteFamilyMember(id: number): Promise<void> {
   );
 }
 
+export async function getAllFamilyMemberAssignments(): Promise<FamilyMemberAssignmentWithLocation[]> {
+  const [rows] = await pool.query<(FamilyMemberAssignmentWithLocation & RowDataPacket)[]>(
+    `SELECT fma.*, l.name AS location_name
+     FROM FamilyMemberAssignment fma
+     JOIN Location l ON l.location_id = fma.location_id
+     ORDER BY fma.start_date DESC`,
+  );
+  return rows;
+}
+
 export async function getFamilyMemberAssignments(
   familyMemberId: number,
 ): Promise<FamilyMemberAssignmentWithLocation[]> {
@@ -97,6 +108,33 @@ export async function getFamilyMemberAssignments(
     [familyMemberId],
   );
   return rows;
+}
+
+export async function createFamilyMemberAssignmentFlat(
+  input: CreateFamilyMemberAssignmentFlatInput,
+): Promise<FamilyMemberAssignmentWithLocation> {
+  try {
+    const [result] = await pool.query<ResultSetHeader>(
+      `INSERT INTO FamilyMemberAssignment (family_member_id, location_id, start_date, end_date)
+       VALUES (?, ?, ?, ?)`,
+      [input.family_member_id, input.location_id, input.start_date, input.end_date ?? null],
+    );
+    const [rows] = await pool.query<(FamilyMemberAssignmentWithLocation & RowDataPacket)[]>(
+      `SELECT fma.*, l.name AS location_name
+       FROM FamilyMemberAssignment fma
+       JOIN Location l ON l.location_id = fma.location_id
+       WHERE fma.assignment_id = ?`,
+      [result.insertId],
+    );
+    return rows[0];
+  } catch (err) {
+    if ((err as MysqlError).code === 'ER_DUP_ENTRY') {
+      throw new ConflictError(
+        'An assignment for this family member, location, and start date already exists',
+      );
+    }
+    throw err;
+  }
 }
 
 export async function createFamilyMemberAssignment(
