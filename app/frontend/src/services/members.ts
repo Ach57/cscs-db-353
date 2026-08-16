@@ -1,11 +1,13 @@
 import { createCrudApi } from './crudApi';
-import type {
-  ClubMember,
-  ClubMemberInput,
-  FamilyMember,
-  FamilyMemberInput,
-  FamilyRelation,
-  FamilyRelationInput,
+import {
+  type ClubMember,
+  type ClubMemberInput,
+  type FamilyMember,
+  type FamilyMemberInput,
+  type FamilyRelation,
+  type FamilyRelationInput,
+  type FamilyMemberAssignment,
+  type FamilyMemberAssignmentInput,
 } from '../types/member';
 export const familyMemberApi = createCrudApi<
   FamilyMember,
@@ -22,3 +24,8 @@ export const familyRelationApi = createCrudApi<
   FamilyRelationInput,
   Partial<FamilyRelationInput>
 >('/club-members/family-relations');
+export const FamilyMemberAssignmentApi = createCrudApi<
+  FamilyMemberAssignment,
+  FamilyMemberAssignmentInput,
+  Partial<FamilyMemberAssignmentInput>
+>('/family-members/family-members-assignment');

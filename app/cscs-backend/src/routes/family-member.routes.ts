@@ -5,13 +5,34 @@ import { asyncHandler } from '../utils/asyncHandler';
 import {
   familyMemberIdParamSchema,
   familyMemberAssignmentParamsSchema,
+  familyMemberAssignmentIdParamSchema,
   createFamilyMemberSchema,
   updateFamilyMemberSchema,
   createFamilyMemberAssignmentSchema,
   updateFamilyMemberAssignmentSchema,
+  createFamilyMemberAssignmentFlatSchema,
 } from '../types/family-member.types';
 
 const router = Router();
+
+// ── Flat assignment resource (must be before /:id to avoid param collision) ───
+router.get('/family-members-assignment', asyncHandler(controller.getAllAssignmentsFlat));
+router.post(
+  '/family-members-assignment',
+  validate(createFamilyMemberAssignmentFlatSchema),
+  asyncHandler(controller.createAssignmentFlat),
+);
+router.put(
+  '/family-members-assignment/:assignmentId',
+  validate(familyMemberAssignmentIdParamSchema, 'params'),
+  validate(updateFamilyMemberAssignmentSchema),
+  asyncHandler(controller.updateAssignmentFlat),
+);
+router.delete(
+  '/family-members-assignment/:assignmentId',
+  validate(familyMemberAssignmentIdParamSchema, 'params'),
+  asyncHandler(controller.removeAssignmentFlat),
+);
 
 router.get('/', asyncHandler(controller.getAll));
 router.get(

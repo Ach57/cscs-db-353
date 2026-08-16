@@ -97,3 +97,19 @@ export interface FamilyRelationInput {
   start_date: string;
   end_date?: string;
 }
+
+export interface FamilyMemberAssignment {
+  assignment_id: number;
+  family_member_id: number;
+  location_id: number;
+  location_name: string;
+  start_date: string;
+  end_date: string | null;
+}
+
+export interface FamilyMemberAssignmentInput {
+  family_member_id: number;
+  location_id: number;
+  start_date: string;
+  end_date: string | null;
+}

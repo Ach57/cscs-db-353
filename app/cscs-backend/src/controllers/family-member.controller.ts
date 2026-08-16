@@ -5,6 +5,7 @@ import {
   UpdateFamilyMemberInput,
   CreateFamilyMemberAssignmentInput,
   UpdateFamilyMemberAssignmentInput,
+  CreateFamilyMemberAssignmentFlatInput,
 } from '../types/family-member.types';
 
 export const getAll = async (_req: Request, res: Response) => {
@@ -46,19 +47,59 @@ export const getAssignments = async (req: Request, res: Response) => {
 export const createAssignment = async (req: Request, res: Response) => {
   const { id } = req.validated!.params as { id: number };
   const input = req.validated!.body as CreateFamilyMemberAssignmentInput;
-  const data = await familyMemberService.createFamilyMemberAssignment(id, input);
+  const data = await familyMemberService.createFamilyMemberAssignment(
+    id,
+    input,
+  );
   res.status(201).json({ success: true, data });
 };
 
 export const updateAssignment = async (req: Request, res: Response) => {
-  const { assignmentId } = req.validated!.params as { id: number; assignmentId: number };
+  const { assignmentId } = req.validated!.params as {
+    id: number;
+    assignmentId: number;
+  };
   const input = req.validated!.body as UpdateFamilyMemberAssignmentInput;
-  const data = await familyMemberService.updateFamilyMemberAssignment(assignmentId, input);
+  const data = await familyMemberService.updateFamilyMemberAssignment(
+    assignmentId,
+    input,
+  );
   res.json({ success: true, data });
 };
 
 export const removeAssignment = async (req: Request, res: Response) => {
-  const { assignmentId } = req.validated!.params as { id: number; assignmentId: number };
+  const { assignmentId } = req.validated!.params as {
+    id: number;
+    assignmentId: number;
+  };
+  await familyMemberService.deleteFamilyMemberAssignment(assignmentId);
+  res.status(204).send();
+};
+
+export const getAllAssignmentsFlat = async (_req: Request, res: Response) => {
+  const data = await familyMemberService.getAllFamilyMemberAssignments();
+  res.json({ success: true, data });
+};
+
+export const createAssignmentFlat = async (req: Request, res: Response) => {
+  const input = req.validated!.body as CreateFamilyMemberAssignmentFlatInput;
+  const data =
+    await familyMemberService.createFamilyMemberAssignmentFlat(input);
+  res.status(201).json({ success: true, data });
+};
+
+export const updateAssignmentFlat = async (req: Request, res: Response) => {
+  const { assignmentId } = req.validated!.params as { assignmentId: number };
+  const input = req.validated!.body as UpdateFamilyMemberAssignmentInput;
+  const data = await familyMemberService.updateFamilyMemberAssignment(
+    assignmentId,
+    input,
+  );
+  res.json({ success: true, data });
+};
+
+export const removeAssignmentFlat = async (req: Request, res: Response) => {
+  const { assignmentId } = req.validated!.params as { assignmentId: number };
   await familyMemberService.deleteFamilyMemberAssignment(assignmentId);
   res.status(204).send();
 };
