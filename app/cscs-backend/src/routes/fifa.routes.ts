@@ -13,6 +13,7 @@ import {
 const router = Router();
 
 router.get('/', asyncHandler(controller.getAll));
+router.get('/participant-overview', asyncHandler(controller.getParticipantOverview));
 router.get('/:id', validate(gameIdParamSchema, 'params'), asyncHandler(controller.getOne));
 router.post('/', validate(createFIFAGameSchema), asyncHandler(controller.create));
 router.put(

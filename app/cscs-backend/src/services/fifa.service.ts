@@ -7,6 +7,7 @@ import {
   CreateFIFAGameInput,
   UpdateFIFAGameInput,
   AddParticipantInput,
+  FIFAParticipantOverview,
 } from '../types/fifa.types';
 import { NotFoundError, ConflictError } from '../utils/AppError';
 
@@ -16,7 +17,44 @@ interface MysqlError extends Error {
 
 export async function getAllGames(): Promise<FIFAGame[]> {
   const [rows] = await pool.query<(FIFAGame & RowDataPacket)[]>(
-    'SELECT * FROM FIFAGame ORDER BY game_date DESC',
+    `SELECT fg.*,
+            l.name AS location_name,
+            COUNT(fp.membership_number) AS participant_count
+       FROM FIFAGame fg
+       JOIN Location l ON l.location_id = fg.location_id
+       LEFT JOIN FIFAParticipation fp ON fp.game_id = fg.game_id
+      GROUP BY fg.game_id, fg.location_id, fg.team_name, fg.opponent_name,
+               fg.game_date, fg.team_score, fg.opponent_score, l.name
+      ORDER BY fg.game_date DESC, fg.game_id DESC`,
+  );
+  return rows;
+}
+
+
+export async function getParticipantOverview(): Promise<FIFAParticipantOverview[]> {
+  const [rows] = await pool.query<(FIFAParticipantOverview & RowDataPacket)[]>(
+    `SELECT cm.membership_number,
+            cm.first_name,
+            cm.last_name,
+            cm.location_id,
+            l.name AS location_name,
+            COUNT(fp.game_id) AS fifa_game_count,
+            GROUP_CONCAT(
+              DISTINCT CONCAT(
+                fg.team_name,
+                ' vs ', fg.opponent_name,
+                ' (#', fg.game_id, ')',
+                ' · ', DATE_FORMAT(fg.game_date, '%Y-%m-%d')
+              )
+              ORDER BY fg.game_date, fg.game_id
+              SEPARATOR ' | '
+            ) AS fifa_games
+       FROM ClubMember cm
+       JOIN Location l ON l.location_id = cm.location_id
+       LEFT JOIN FIFAParticipation fp ON fp.membership_number = cm.membership_number
+       LEFT JOIN FIFAGame fg ON fg.game_id = fp.game_id
+      GROUP BY cm.membership_number, cm.first_name, cm.last_name, cm.location_id, l.name
+      ORDER BY cm.membership_number ASC`,
   );
   return rows;
 }

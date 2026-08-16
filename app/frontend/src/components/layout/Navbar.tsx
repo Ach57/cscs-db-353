@@ -4,6 +4,7 @@ import {
   House,
   Mail,
   MapPin,
+  Trophy,
   UsersRound,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
@@ -15,6 +16,7 @@ const navigationItems = [
   { label: "People", path: "/people", icon: UsersRound },
   { label: "Team Formations", path: "/team-formations", icon: UsersRound },
   { label: "Payments", path: "/payments", icon: CreditCard },
+  { label: "FIFA Games", path: "/fifa-games", icon: Trophy },
   { label: "Email Logs", path: "/email-logs", icon: Mail },
   { label: "Reports", path: "/reports", icon: BarChart3 },
 ];

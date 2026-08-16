@@ -7,6 +7,11 @@ export const getAll = async (_req: Request, res: Response) => {
   res.json({ success: true, data });
 };
 
+export const getParticipantOverview = async (_req: Request, res: Response) => {
+  const data = await fifaService.getParticipantOverview();
+  res.json({ success: true, data });
+};
+
 export const getOne = async (req: Request, res: Response) => {
   const { id } = req.validated!.params as { id: number };
   const data = await fifaService.getGameById(id);
