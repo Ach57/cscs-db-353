@@ -5,6 +5,7 @@ import {
   UpdatePersonnelInput,
   CreatePersonnelAssignmentInput,
   UpdatePersonnelAssignmentInput,
+  CreatePersonnelAssignmentFlatInput,
 } from '../types/personnel.types';
 
 export const getAll = async (_req: Request, res: Response) => {
@@ -51,14 +52,50 @@ export const createAssignment = async (req: Request, res: Response) => {
 };
 
 export const updateAssignment = async (req: Request, res: Response) => {
-  const { assignmentId } = req.validated!.params as { id: number; assignmentId: number };
+  const { assignmentId } = req.validated!.params as {
+    id: number;
+    assignmentId: number;
+  };
   const input = req.validated!.body as UpdatePersonnelAssignmentInput;
-  const data = await personnelService.updatePersonnelAssignment(assignmentId, input);
+  const data = await personnelService.updatePersonnelAssignment(
+    assignmentId,
+    input,
+  );
   res.json({ success: true, data });
 };
 
 export const removeAssignment = async (req: Request, res: Response) => {
-  const { assignmentId } = req.validated!.params as { id: number; assignmentId: number };
+  const { assignmentId } = req.validated!.params as {
+    id: number;
+    assignmentId: number;
+  };
+  await personnelService.deletePersonnelAssignment(assignmentId);
+  res.status(204).send();
+};
+
+export const getAllAssignments = async (_req: Request, res: Response) => {
+  const data = await personnelService.getAllPersonnelAssignments();
+  res.json({ success: true, data });
+};
+
+export const createAssignmentFlat = async (req: Request, res: Response) => {
+  const input = req.validated!.body as CreatePersonnelAssignmentFlatInput;
+  const data = await personnelService.createPersonnelAssignmentFlat(input);
+  res.status(201).json({ success: true, data });
+};
+
+export const updateAssignmentFlat = async (req: Request, res: Response) => {
+  const { assignmentId } = req.validated!.params as { assignmentId: number };
+  const input = req.validated!.body as UpdatePersonnelAssignmentInput;
+  const data = await personnelService.updatePersonnelAssignment(
+    assignmentId,
+    input,
+  );
+  res.json({ success: true, data });
+};
+
+export const removeAssignmentFlat = async (req: Request, res: Response) => {
+  const { assignmentId } = req.validated!.params as { assignmentId: number };
   await personnelService.deletePersonnelAssignment(assignmentId);
   res.status(204).send();
 };
