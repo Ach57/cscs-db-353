@@ -1,8 +1,8 @@
 [
   {
-    "id": "TC-001",
-    "suite": "Location Management",
-    "title": "Reject a second Head location",
+    "id": "TC-018",
+    "suite": "Team Formation Management",
+    "title": "Reject a third formation in the same session",
     "type": "Negative",
     "status": "Passed"
   }

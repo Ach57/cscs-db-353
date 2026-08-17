@@ -5,3 +5,4 @@ dist/
 .venv
 test-results
 screenshots
+results.json

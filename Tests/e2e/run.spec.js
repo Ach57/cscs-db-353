@@ -51,13 +51,8 @@ async function runAction(page, action) {
 // Generic pass/fail heuristics -- edit the selectors to match your app.
 const ASSERTIONS = {
   async error(page) {
-    // e.g. a toast/banner/inline error rendered somewhere on the page
-    // const errorEl = page.locator(
-    //   '[role="alert"], .error, .toast-error, text=/error|rejected|cannot|not allowed/i',
-    // );
-    // await expect(errorEl.first()).toBeVisible({ timeout: 5000 });
     await expect(
-      page.getByText('The club can only have one Head location.'),
+      page.locator('p[role="alert"].relation-page__status--error'),
     ).toBeVisible({ timeout: 5000 });
   },
   async success(page) {

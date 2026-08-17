@@ -5,7 +5,7 @@
   "main": "list-remaining.js",
   "scripts": {
     "showRemaining": "node list-remaining.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "npx playwright test run.spec.js"
   },
   "keywords": [],
   "author": "",
