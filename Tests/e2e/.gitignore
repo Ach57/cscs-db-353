@@ -4,5 +4,4 @@ dist/
 *.log
 .venv
 test-results
-screenshots
 results.json
