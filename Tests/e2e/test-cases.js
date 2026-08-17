@@ -1374,7 +1374,40 @@ module.exports = [
   //   suite: 'Formation Assignment (Roster)',
   //   type: 'Negative',
   //   title: 'Reject a same-day assignment under 3 hours apart',
-  //   actions: [],
+  //   actions: [
+  //     { type: 'goto', path: '/team-formations?tab=assignments' },
+  //     { type: 'click', selector: 'button:text("Add record")' },
+  //     { type: 'wait', ms: 800 },
+
+  //     // 1. Formation created in TC-015
+  //     {
+  //       type: 'dblclick',
+  //       selector: '.ag-row:last-child .ag-cell[col-id="formation_id"]',
+  //     },
+  //     {
+  //       type: 'fill',
+  //       selector: '.ag-row:last-child .ag-cell[col-id="formation_id"] input',
+  //       value: '1',
+  //     },
+
+  //     // 2. Member already assigned to another formation
+  //     {
+  //       type: 'dblclick',
+  //       selector: '.ag-row:last-child .ag-cell[col-id="membership_number"]',
+  //     },
+  //     {
+  //       type: 'fill',
+  //       selector:
+  //         '.ag-row:last-child .ag-cell[col-id="membership_number"] input',
+  //       value: '2',
+  //     },
+
+  //     // Role defaults to Goalkeeper
+
+  //     // Save
+  //     { type: 'click', selector: 'button:text("Save changes")' },
+  //     { type: 'wait', ms: 800 },
+  //   ],
   //   expect: 'error',
   // },
   // {

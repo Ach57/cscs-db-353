@@ -5,6 +5,7 @@ module.exports = defineConfig({
   testDir: '.',
   timeout: 60_000,
   retries: 0,
+  workers: 1, // tests are stateful and must run sequentially
   reporter: [['list']],
   use: {
     baseURL: 'http://localhost:3000',
