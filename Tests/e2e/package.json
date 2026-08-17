@@ -1,0 +1,17 @@
+{
+  "name": "e2e",
+  "version": "1.0.0",
+  "description": "This mini-project is designed to automatically test the features in the frontend through an automatic script that will then take screenshots as proof and place them into a folder `screenshots` which will be used in the final report submission as proof of functionality.",
+  "main": "list-remaining.js",
+  "scripts": {
+    "showRemaining": "node list-remaining.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@playwright/test": "^1.62.1"
+  }
+}
