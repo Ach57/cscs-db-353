@@ -1,0 +1,163 @@
+#!/bin/bash
+
+# ---------------------------------------------
+# IMPORTANT! READ FIRST BEFORE RUNNING.
+# ONLY USE THIS SCRIPT TO LOCALLY HOST YOUR SERVERS.
+# THIS SCRIPT WILL HOST TWO SERVERS
+#   - mysql:9.2 RUNNING ON 3307:3306
+#   - Adminer RUNNING ON 8080:8080
+# FOR MORE CHECK ./docker-compose.yml
+# ---------------------------------------------
+
+# CMDS: start, stop, restart, reset, logs, connect, queries, verify
+# SPECIAL CMDS: 
+#         - adminer-remote-start (Adminer GUI pointed at AITS server (port 8081))
+#         - adminer-remote-stop
+
+if [ -f .env ]; then
+  export $(grep -v '^#' .env | xargs)
+fi
+
+case "$1" in
+  start)
+    echo "Starting MySQL and Adminer..."
+    docker compose up -d
+    ;;
+    
+  stop)
+    echo "Stopping containers..."
+    docker compose down
+    ;;
+    
+  restart)
+    echo "Restarting containers..."
+    docker compose down
+    docker compose up -d
+    ;;
+    
+  reset)
+    echo "Removing containers and volumes..."
+    docker compose down -v
+    docker compose up -d
+    ;;
+    
+  logs)
+    docker compose logs -f
+    ;;
+
+  queries)
+    echo "Running sql/03_queries.sql against wqc353_1-db..."
+    docker exec -i -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" wqc353_1-db mysql -u root wqc353_1 < sql/03_queries.sql
+    ;;
+
+  verify)
+    echo "Running sql/04_verify.sql against wqc353_1..."
+    docker exec -i -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" wqc353_1-db mysql -u root wqc353_1 < sql/04_verify.sql
+    ;;
+
+  triggers)
+    echo "Applying triggers (sql/05_trigger.sql)..."
+    docker exec -i -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" wqc353_1-db mysql -u root wqc353_1 < sql/05_trigger.sql
+    ;;
+
+  trigger-tests)
+    echo "Running trigger tests (sql/07_trigger_tests.sql)..."
+    docker exec -i -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" wqc353_1-db mysql -u root wqc353_1 --table < sql/07_trigger_tests.sql
+    ;;
+
+  email-event)
+    echo "Applying email event (sql/06_email_event.sql)..."
+    docker exec -i -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" wqc353_1-db mysql -u root wqc353_1 < sql/06_email_event.sql
+    ;;
+
+  email-test)
+    # Call the procedure with today's date to generate logs for the next 7 days
+    echo "Generating email logs for the next 7 days..."
+    docker exec -i -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" wqc353_1-db \
+      mysql -u root wqc353_1 --table \
+      -e "CALL sp_generate_weekly_schedule_emails(CURDATE());"
+    ;;
+
+  connect)
+    echo "Connecting to local MySQL (wqc353_1)..."
+    docker exec -it -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" wqc353_1-db mysql -u root wqc353_1
+    ;;
+
+  adminer-remote-start)
+    echo "Starting Adminer pointed at AITS (wqc353.encs.concordia.ca)..."
+    echo "Open http://localhost:8081 — login with your AITS DB user/password/db from the email."
+    echo "Requires Concordia VPN if you're off the ENCS network."
+    docker compose -f docker-compose.remote.yml up -d
+    ;;
+
+  adminer-remote-stop)
+    echo "Stopping remote Adminer..."
+    docker compose -f docker-compose.remote.yml down
+    ;;
+
+  dev-start)
+    echo "Starting full dev stack (MySQL + Backend + Frontend)..."
+    docker compose -f docker-compose.dev.yml up -d --build
+    ;;
+
+  dev-stop)
+    echo "Stopping dev stack..."
+    docker compose -f docker-compose.dev.yml down
+    ;;
+
+  dev-restart)
+    echo "Restarting dev stack..."
+    docker compose -f docker-compose.dev.yml down
+    docker compose -f docker-compose.dev.yml up -d --build
+    ;;
+
+  dev-reset)
+    echo "Removing dev stack containers and volumes..."
+    docker compose -f docker-compose.dev.yml down -v
+    docker compose -f docker-compose.dev.yml up -d --build
+    ;;
+
+  dev-logs)
+    docker compose -f docker-compose.dev.yml logs -f
+    ;;
+
+  dev-logs-backend)
+    docker compose -f docker-compose.dev.yml logs -f backend
+    ;;
+
+  dev-logs-frontend)
+    docker compose -f docker-compose.dev.yml logs -f frontend
+    ;;
+
+  *)
+    echo "Usage:"
+    echo "  ./docker.sh start"
+    echo "  ./docker.sh stop"
+    echo "  ./docker.sh restart"
+    echo "  ./docker.sh reset"
+    echo "  ./docker.sh logs"
+    echo "  ./docker.sh connect               # open interactive MySQL shell"
+    echo "  ./docker.sh queries               # run 03_queries.sql, print results"
+    echo "  ./docker.sh verify                # run 04_verify.sql, print COUNT(*) per table"
+    echo "  ./docker.sh adminer-remote-start   # Adminer GUI pointed at AITS server (port 8081)"
+    echo "  ./docker.sh adminer-remote-stop"
+    echo ""
+    echo "  --- Full dev stack (docker-compose.dev.yml) ---"
+    echo "  ./scripts/local.sh dev-start       # build + start MySQL, Backend, Frontend"
+    echo "  ./scripts/local.sh dev-stop"
+    echo "  ./scripts/local.sh dev-restart"
+    echo "  ./scripts/local.sh dev-reset       # wipe volumes and rebuild"
+    echo "  ./scripts/local.sh dev-logs        # tail all services"
+    echo "  ./scripts/local.sh dev-logs-backend"
+    echo "  ./scripts/local.sh dev-logs-frontend"
+    echo ""
+    echo "  --- Triggers ---"
+    echo "  ./scripts/local.sh triggers           # (re)apply 05_trigger.sql"
+    echo "  ./scripts/local.sh trigger-tests      # run 07_trigger_tests.sql, print PASS/FAIL table"
+    echo ""
+    echo "  --- Email Event ---"
+    echo "  ./scripts/local.sh email-event        # (re)apply 06_email_event.sql"
+    echo "  ./scripts/local.sh email-test         # manually fire the procedure for the next 7 days"
+    exit 1
+    ;;
+esac

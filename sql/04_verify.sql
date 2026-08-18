@@ -17,4 +17,8 @@ UNION ALL SELECT 'Hobby', COUNT(*) FROM Hobby
 UNION ALL SELECT 'ClubMemberHobby', COUNT(*) FROM ClubMemberHobby
 UNION ALL SELECT 'Payment', COUNT(*) FROM Payment
 UNION ALL SELECT 'FIFAGame', COUNT(*) FROM FIFAGame
-UNION ALL SELECT 'FIFAParticipation', COUNT(*) FROM FIFAParticipation;
+UNION ALL SELECT 'FIFAParticipation', COUNT(*) FROM FIFAParticipation
+UNION ALL SELECT 'Session', COUNT(*) FROM Session
+UNION ALL SELECT 'TeamFormation', COUNT(*) FROM TeamFormation
+UNION ALL SELECT 'TeamFormationAssignment', COUNT(*) FROM TeamFormationAssignment
+UNION ALL SELECT 'EmailLog', COUNT(*) FROM EmailLog;

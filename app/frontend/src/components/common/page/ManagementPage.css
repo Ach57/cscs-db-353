@@ -1,0 +1,84 @@
+.management-page {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+  padding: 28px clamp(18px, 3vw, 48px) 36px;
+  text-align: left;
+}
+
+.management-page__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.management-page__heading { min-width: 0; }
+.management-page__heading h1 { margin: 0; color: #111827; font-size: clamp(2rem, 4vw, 3.25rem); line-height: 1.05; letter-spacing: -0.04em; }
+.management-page__heading > p:last-child { max-width: 760px; margin-top: 10px; color: #64748b; font-size: 1rem; line-height: 1.6; }
+.management-page__eyebrow { margin: 0 0 8px; color: #315b8e; font-size: 0.75rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
+.management-page__aside { flex: 0 0 auto; }
+
+.management-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: start;
+  gap: 40px;
+  padding: 16px;
+  border: 1px solid #dbe4ef;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.management-toolbar__actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-left: auto; }
+.management-field { display: grid; gap: 6px; min-width: 150px; }
+.management-field__label { color: #334155; font-size: 0.78rem; font-weight: 700; }
+.management-field__hint { color: #64748b; font-size: 0.72rem; }
+.management-field--disabled { opacity: 0.55; }
+.management-input { width: 100%; min-height: 42px; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; color: #111827; font: inherit; }
+.management-input:focus { border-color: #315b8e; outline: 3px solid rgb(49 91 142 / 14%); }
+.management-input:disabled { cursor: not-allowed; background: #f1f5f9; }
+
+.management-status { margin: 0; padding: 11px 14px; border-radius: 8px; font-weight: 600; }
+.management-status--success { background: #ecfdf5; color: #166534; }
+.management-status--error { background: #fef2f2; color: #b91c1c; }
+.management-status--warning { background: #fff7ed; color: #9a3412; }
+
+.management-card { min-width: 0; border: 1px solid #dbe4ef; border-radius: 12px; background: #fff; overflow: hidden; }
+.management-card__header { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; padding: 18px 20px; border-bottom: 1px solid #e2e8f0; }
+.management-card__header h2 { margin: 0; color: #172033; font-size: 1.15rem; }
+.management-card__header p { margin-top: 6px; color: #64748b; font-size: 0.9rem; }
+.management-card__meta { color: #475569; font-size: 0.85rem; font-weight: 700; white-space: nowrap; }
+.management-table-wrap { width: 100%; overflow: auto; }
+.management-table-wrap table { width: 100%; border-collapse: collapse; background: #fff; }
+.management-table-wrap th, .management-table-wrap td { padding: 12px 14px; border-bottom: 1px solid #e2e8f0; text-align: left; vertical-align: top; }
+.management-table-wrap th { position: sticky; top: 0; z-index: 1; background: #f8fafc; color: #475569; font-size: 0.76rem; letter-spacing: 0.02em; text-transform: none; }
+.management-table-wrap tbody tr:last-child td { border-bottom: 0; }
+.management-empty { padding: 34px 20px; color: #64748b; text-align: center; }
+
+.button--full { width: 100%; }
+.button--ghost { border-color: transparent; background: transparent; }
+.button--ghost:hover { background: #f1f5f9; }
+
+.management-health { display: grid; gap: 2px; min-width: 190px; padding: 12px 14px; border-radius: 10px; font-size: 0.82rem; }
+.management-health strong { font-size: 0.88rem; }
+.management-health--ok { background: #ecfdf5; color: #166534; }
+.management-health--bad { background: #fef2f2; color: #991b1b; }
+
+@media (max-width: 760px) {
+  .management-page { padding: 22px 16px 28px; }
+  .management-page__header { flex-direction: column; }
+  .management-page__aside { width: 100%; }
+  .management-toolbar { align-items: stretch; }
+  .management-field { flex: 1 1 100%; }
+  .management-toolbar__actions { width: 100%; margin-left: 0; }
+  .management-toolbar__actions .button { flex: 1 1 auto; }
+  .management-card__header { flex-direction: column; }
+}
+
+.assignment-page__role { flex: 1 1 260px; }
+.assignment-page__search { max-width: 430px; padding: 16px 20px; }
+.assignment-page__row { cursor: pointer; }
+.assignment-page__row:hover td { background: #f8fafc; }
+.assignment-page__null { color: #94a3b8; font-style: italic; }
+.reports-page__description .management-card__header { border-bottom: 0; }

@@ -9,6 +9,8 @@ services:
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
 
+    command: --event-scheduler=ON
+
     ports:
       - "3307:3306"
 
@@ -16,6 +18,8 @@ services:
       - mysql_data:/var/lib/mysql
       - ./sql/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
       - ./sql/02_seed.sql:/docker-entrypoint-initdb.d/02_seed.sql
+      - ./sql/05_trigger.sql:/docker-entrypoint-initdb.d/05_trigger.sql
+      - ./sql/06_email_event.sql:/docker-entrypoint-initdb.d/06_email_event.sql
 
     restart: unless-stopped
 
