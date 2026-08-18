@@ -1,240 +1,165 @@
 # A Simple Database Application for the Country Soccer Club System (CSCS)
 
+---
+
 ```mermaid
 flowchart TD
-%% ===== ENTITIES =====
+
+%% ===== LOCATION & PERSONNEL =====
+subgraph LOC_PERSONNEL["Location & Personnel"]
 LOCATION["<b>LOCATION</b><br/><u>LID</u><br/>Type, Name, Address, City,<br/>Province, PostalCode,<br/>WebAddress, MaxCapacity"]
 LOCPHONE(["PhoneNumber<br/>(multivalued)"])
-
 EMPLOYEE["<b>EMPLOYEE</b><br/><u>MedCard</u><br/>SSN (unique, not null),<br/>FirstName, LastName, DOB,<br/>Phone, Address, City, Province,<br/>PostalCode, Email, Role, Mandate"]
-
-MEMBER["<b>FAMILY MEMBER</b><br/><u>MedCard</u><br/>SSN, FirstName, LastName, DOB,<br/>Phone, Address, City, Province,<br/>PostalCode, Email"]
-
-CLUBMEMBER["<b>CLUBMEMBER</b><br/><u>CMN</u><br/>FirstName, LastName, DOB,<br/>Height, Weight, SSN, MedCard,<br/>Phone, Address, City, Province, PostalCode<br/><i>Type(Major/Minor) - derived, not stored</i>"]
-
-HOBBY["<b>HOBBY</b><br/><u>HobbyName</u>"]
-
-PAYMENT["<b>PAYMENT</b><br/><u>PaymentID</u><br/>PaymentDate, Amount,<br/>Method, DateOfPayment"]
-
-FIFAGAME["<b>FIFAGAME</b><br/><u>GameID</u><br/>Team, Opponent, DateOfGame, FinalScore"]
-
-%% ===== RELATIONSHIPS =====
 WORKS_AT{"WORKS_AT<br/>StartDate, EndDate"}
 MANAGES{"MANAGES"}
+end
+
+%% ===== FAMILY & CLUB MEMBERS =====
+subgraph FAMILY_CLUB["Family & Club Members"]
+MEMBER["<b>FAMILY MEMBER</b><br/><u>MedCard</u><br/>SSN (unique, not null),<br/>FirstName, LastName, DOB,<br/>Phone, Address, City, Province,<br/>PostalCode, Email"]
+CLUBMEMBER["<b>CLUBMEMBER</b><br/><u>CMN</u> (global auto-increment)<br/>FirstName, LastName, DOB,<br/>Height, Weight, SSN, MedCard,<br/>Phone, Address, City, Province, PostalCode<br/><i>Type(Major/Minor) - derived, not stored</i>"]
 ASSOC_LOC{"ASSOC_WITH<br/>StartDate, EndDate"}
 GUARDIAN{"GUARDIAN_OF<br/>Relation, StartDate, EndDate"}
 AT_LOC{"CURRENTLY_AT"}
+end
+
+%% ===== HOBBIES & FINANCE =====
+subgraph HOBBY_FIN["Hobbies & Finance"]
+HOBBY["<b>HOBBY</b><br/><u>HobbyName</u>"]
+PAYMENT["<b>PAYMENT</b><br/><u>PaymentID</u><br/>PaymentDate, Amount,<br/>Method(Cash/Debit/Credit),<br/>MembershipYear<br/><i>max 4 installments/year</i>"]
 HAS_HOBBY{"HAS_HOBBY"}
 MAKES{"MAKES"}
+end
+
+%% ===== FIFA =====
+subgraph FIFA["FIFA Participation"]
+FIFAGAME["<b>FIFAGAME</b><br/><u>GameID</u><br/>Team, Opponent, DateOfGame, FinalScore"]
 PARTICIPATES{"PARTICIPATES_IN"}
 HELD_AT{"HELD_AT"}
+end
 
-%% ===== EDGES: multivalued attr =====
+%% ===== SESSIONS & FORMATIONS =====
+subgraph SESSIONS["Sessions & Team Formations"]
+SESSION["<b>SESSION</b><br/><u>SessionID</u><br/>DateTime, Address, Type(Training/Game)"]
+TEAMFORMATION["<b>TEAM FORMATION</b><br/><u>FormationID</u><br/>TeamName, Score"]
+FORM_LOC{"BELONGS_TO"}
+FORM_SESSION{"IN_SESSION"}
+FORM_COACH{"COACHED_BY"}
+ASSIGNED{"ASSIGNED_TO<br/>Role"}
+end
+
+%% ===== EMAIL =====
+subgraph EMAIL["Email Notifications"]
+EMAILLOG["<b>EMAIL LOG</b><br/><u>EmailID</u><br/>Date, Subject, BodySnippet(100 chars)"]
+LOG_RECEIVER{"SENT_TO"}
+LOG_FORMATION{"ABOUT"}
+end
+
+%% ===== EDGES =====
 LOCATION --- LOCPHONE
-
-%% ===== EDGES: WORKS_AT (M:N, Employee<->Location over time) =====
 EMPLOYEE --- WORKS_AT
 WORKS_AT --- LOCATION
-
-%% ===== EDGES: MANAGES (1:1) =====
 LOCATION --> MANAGES
 MANAGES --> EMPLOYEE
 
-%% ===== EDGES: ASSOC_LOC (M:N, FamilyMember<->Location over time) =====
 MEMBER --- ASSOC_LOC
 ASSOC_LOC --- LOCATION
-
-%% ===== EDGES: GUARDIAN_OF (M:N, FamilyMember<->ClubMember over time) =====
 MEMBER --- GUARDIAN
 GUARDIAN --- CLUBMEMBER
-
-%% ===== EDGES: CURRENTLY_AT (N:1, ClubMember->Location, current only) =====
 CLUBMEMBER --- AT_LOC
 AT_LOC --> LOCATION
 
-%% ===== EDGES: HAS_HOBBY (M:N) =====
 CLUBMEMBER --- HAS_HOBBY
 HAS_HOBBY --- HOBBY
-
-%% ===== EDGES: MAKES (1:N, ClubMember->Payment) =====
 PAYMENT --- MAKES
 MAKES --> CLUBMEMBER
 
-%% ===== EDGES: PARTICIPATES_IN (M:N, ClubMember<->FIFAGame) =====
 CLUBMEMBER --- PARTICIPATES
 PARTICIPATES --- FIFAGAME
-
-%% ===== EDGES: HELD_AT (N:1, FIFAGame->Location) =====
 FIFAGAME --- HELD_AT
 HELD_AT --> LOCATION
+
+TEAMFORMATION --- FORM_LOC
+FORM_LOC --> LOCATION
+TEAMFORMATION --- FORM_SESSION
+FORM_SESSION --> SESSION
+TEAMFORMATION --- FORM_COACH
+FORM_COACH --> EMPLOYEE
+CLUBMEMBER --- ASSIGNED
+ASSIGNED --- TEAMFORMATION
+
+EMAILLOG --- LOG_RECEIVER
+LOG_RECEIVER --> CLUBMEMBER
+EMAILLOG --- LOG_FORMATION
+LOG_FORMATION --> TEAMFORMATION
 ```
 
-##### **LEGEND**
+**Legend**
 
-- Rectangles represent entity sets;
+- `(-->)` points to the entity on the "1" side of the relationship.
+- Plain line `(--)` = M:N relationship, plain on both ends.
+- `<u>` = primary/partial key. Diamond = relationship (attributes listed on the diamond if it carries data).
 
-- Diamonds represent **relationship sets;**
+---
 
-- Ovals represent **multivalued attributes;**
+## Constraints
 
-- **Primary key attributes are marked (PK);**
+### Location
 
-- Arrowheads point to the "1" side of a relationship; and
+- One Head location; any number of Branches.
+- Head location must have: General Manager, deputy manager, treasurer, secretary, ≥1 administrator.
+- GM of the Head location = President of the club.
+- `MaxCapacity` = cap on _active_ club members at that location.
 
-- Plain line marks the "many" side.
+### Employee (Personnel)
 
-### Key Design Decisions
+- `SSN` unique, **not null**, across all personnel.
+- `MedCard` unique across all personnel.
+- `Role` ∈ {Administrator, Captain, Coach, Assistant Coach, Other} — GM counts as Administrator.
+- `Mandate` ∈ {Volunteer, Salaried}.
+- One role at a time.
+- One location at a time, but time-based over their career (`WORKS_AT` start/end date; null end = still active) — can return to a prior location in a later stint.
 
-- The Personnel-to-Location and FamilyMember-to-Location associations are time-dependent (WORKS_AT, ASSOC_WITH); thus, each has its own associative table that has its own StartDate/EndDate attributes, as opposed to a foreign key column on the entity. That is because a person may change locations and all of this needs to be tracked.
+### Family Member
 
-- The association between ClubMember and FamilyMember (GUARDIAN_OF) is time-dependent and is M:N – that is, a minor club member can have different family members as his guardians at different periods of time, and one and the same family member can be the guardian of multiple club members.
+- One location at a time, time-based (`ASSOC_WITH`), same pattern as Employee.
+- `Relation` ∈ {Father, Mother, Grandfather, Grandmother, Tutor, Partner, Friend, Other}.
+- Can have multiple children as club members.
 
-- The FIFAGAME entity is a strong entity which has M:N association with the ClubMember entity through the PARTICIPATES_IN relationship. In this way, we can avoid repetition of the game information (opponent, score, date) for each individual participant
+### Club Member
 
-- ClubMember.Type (Major/Minor) and "active/inactive" attribute (membership status) are derived attributes, computed on demand based on DateOfBirth and payment history attributes, respectively. We do not want to store those in the database; otherwise, the data will get out-of-date.
+- `CMN` globally unique, auto-increment — **not** scoped per location.
+- Major ≥ 18 years old; Minor = 4–17.
+- Minimum age **4** at registration.
+- Minor must be linked to ≥1 family member; that link can change over time (`GUARDIAN_OF` is time-based).
+- Hobbies optional, must come from the fixed `Hobby` list.
+- One location at a time (current only).
+- Major/Minor is **derived** from DOB, not stored.
 
-- The CMN (membership number) attribute is a single, system-wide auto-increment attribute serving as a primary key.
+### Payment / Finance
 
-# 2. Database Schema — DDL, Keys, and Relationships
+- Annual fee: $100 (minor) / $200 (major).
+- Max 4 installments per year.
+- Excess over the fee cap in a year → **donation**, derived (`SUM(payment) − cap`), not stored.
+- Prior year's fees not fully paid → **inactive**, derived, not stored.
+- Inactive members cannot participate in any game or activity — enforced at application/trigger level, not a simple FK.
 
-The above E/R diagram has been transformed into relational forms using the standard transformation rules that include: An entity set is transformed to a table; A many-to-many or temporal relationship is transformed into a junction table which has either a composite key or surrogate key; A one-to-many relationship is transformed into a foreign key at the “many” end; and
+### FIFA Game
 
-### 2.1 Primary Keys
+- Per member per game: team played with, opponent, date, location, final score.
 
-| **Table**                | **Primary Key**                   |
-| ------------------------ | --------------------------------- |
-| Location                 | location_id                       |
-| LocationPhone            | (location_id, phone_number)       |
-| Personnel                | personnel_id                      |
-| PersonnelAssignment      | assignment_id                     |
-| FamilyMember             | family_member_id                  |
-| FamilyMemberAssignment   | assignment_id                     |
-| ClubMember               | membership_number(AUTO_INCREMENT) |
-| ClubMemberFamilyRelation | relation_id                       |
-| Hobby                    | hobby_id                          |
-| ClubMemberHobby          | (membership_number,hobby_id)      |
-| Payment                  | payment_id                        |
-| FIFAGame                 | game_id                           |
-| FIFAParticipation        | (game_id,membership_number)       |
+### Session / Team Formation
 
-### 2.2 Foreign Keys
+- One session = exactly 2 teams.
+- Each team tied to one location; the two teams can share or differ in location.
+- All players on a team must be club members from that team's location.
+- Roles are drawn from a fixed 11-value list (Goalkeeper, Right/Left fullback, Center back, Center back/sweeper, Defending/holding midfielder, Right midfielder/winger, Central midfielder, Striker, Attacking midfielder, Left winger).
+- All players in one formation must be all-boys or all-girls — no mixing.
+- Conflict rule: a player can't be assigned to two formations same day unless start times are ≥3 hours apart — violating assignment rejected.
 
-| **Table**                | **Foreign Key**   | **References** |
-| ------------------------ | ----------------- | -------------- |
-| PersonnelAssignment      | personnel_id      | Personnel      |
-| PersonnelAssignment      | location_id       | Location       |
-| FamilyMemberAssignment   | family_member_id  | FamilyMember   |
-| FamilyMemberAssignment   | location_id       | Location       |
-| ClubMember               | location_id       | Location       |
-| ClubMemberFamilyRelation | membership_number | ClubMember     |
-| ClubMemberFamilyRelation | family_member_id  | FamilyMember   |
-| ClubMemberHobby          | membership_number | ClubMember     |
-| ClubMemberHobby          | hobby_id          | Hobby          |
-| Payment                  | membership_number | ClubMember     |
-| FIFAParticipation        | membership_number | ClubMember     |
-| FIFAParticipation        | game_id           | FIFAGame       |
-| LocationPhone            | location_id       | Location       |
+### Email
 
-### 2.3 Constraints
-
-- Personnel.ssn and FamilyMember.ssn are NOT NULL and UNIQUE, per the specification.
-
-- Medicare numbers are UNIQUE for Personnel and FamilyMember (no two people share a Medicare card number).
-
-- Personnel role is restricted to an ENUM of the roles named in the specification (General Manager, Deputy Manager, Treasurer, Secretary, Administrator, Captain, Coach, Assistant Coach, Other).
-
-- Personnel mandate is restricted to ENUM('Volunteer', 'Salaried').
-
-- Payment method is restricted to ENUM('Cash', 'Debit', 'Credit').
-
-- ClubMember.membership_number is a global AUTO_INCREMENT primary key, unique across all locations.
-
-- Foreign keys ensure referential integrity everywhere — no orphaned rows for assignments, payments, hobbies or game participation.
-
-- DATE type is used for all date columns; DECIMAL(10,2) type is used for money columns; DECIMAL(5,2) type is used for height/weight columns.
-
-### 2.4 Data Types Used
-
-| **Data Type** | **Purpose**                                                           |
-| ------------- | --------------------------------------------------------------------- |
-| INT           | Primaryand foreign keys                                               |
-| VARCHAR       | Names, addresses, emails, phonenumbers, SSN,Medicarenumbers           |
-| DATE          | Birth dates,assignment dates, payment dates, game dates               |
-| DECIMAL(10,2) | Payment amounts                                                       |
-| DECIMAL(5,2)  | Height and weight                                                     |
-| ENUM          | Personnel role,mandate, payment method,location type,relationshiptype |
-
-# 3. Database Population
-
-The database is populated using sql/02_seed.sql, inserted in an order that respects foreign-key dependencies (Location before ClubMember, ClubMember before Payment, etc.). The specification requires at least 10 representative tuples per table such that every query returns at least two rows.
-
-### 3.1 Current Row Counts
-
-| **Table**                | **Row Count** | **Meets≥10 requirement?** |
-| ------------------------ | ------------- | ------------------------- |
-| Location                 | 10            | Yes                       |
-| LocationPhone            | 11            | Yes                       |
-| Personnel                | 10            | Yes                       |
-| PersonnelAssignment      | 10            | Yes                       |
-| FamilyMember             | 10            | Yes                       |
-| FamilyMemberAssignment   | 10            | Yes                       |
-| ClubMember               | 10            | Yes                       |
-| ClubMemberFamilyRelation | 10            | Yes                       |
-| Hobby                    | 10            | Yes                       |
-| ClubMemberHobby          | 18            | Yes                       |
-| Payment                  | 18            | Yes                       |
-| FIFAGame                 | 10            | Yes                       |
-| FIFAParticipation        | 29            | Yes                       |
-
-### 3.2 Seed Data (02_seed.sql)
-
-| `-- =========================================================`<br>`-- CSCS (Country Soccer Club System) - Seed Data` |
-| -------------------------------------------------------------------------------------------------------------------- |
-| `-- Insert order respects FK dependencies:`                                                                          |
-| `-- Location -> LocationPhone`                                                                                       |
-| `-- Personnel -> PersonnelAssignment`                                                                                |
-| `-- FamilyMember -> FamilyMemberAssignment`                                                                          |
-| `-- Location -> ClubMember -> ClubMemberFamilyRelation`                                                              |
-| `-- Hobby -> ClubMemberHobby`                                                                                        |
-| `-- ClubMember -> Payment`                                                                                           |
-| `-- Location -> FIFAGame -> FIFAParticipation`                                                                       |
-
-# 4. Table Verification — SELECT COUNT(\*) FROM R
-
-The output of "SELECT COUNT(\*) FROM R;" for each relation R that is formed in the database is listed below. This has been done using sql/04_verify.sql on the local development database (which matches the AITS wqc353_1 database schema).
-
-| **Relation (R)**         | **COUNT(\*)** |
-| ------------------------ | ------------- |
-| Location                 | 10            |
-| LocationPhone            | 11            |
-| Personnel                | 10            |
-| PersonnelAssignment      | 10            |
-| FamilyMember             | 10            |
-| FamilyMemberAssignment   | 10            |
-| ClubMember               | 10            |
-| ClubMemberFamilyRelation | 10            |
-| Hobby                    | 10            |
-| ClubMemberHobby          | 18            |
-| Payment                  | 18            |
-| FIFAGame                 | 10            |
-| FIFAParticipation        | 29            |
-
-Verification Script (04_verify.sql)
-
-```sql
-USE wqc353_1;
-
-SELECT 'Location' AS table_name, COUNT(*) AS row_count FROM Location
-UNION ALL SELECT 'LocationPhone', COUNT(*) FROM LocationPhone
-UNION ALL SELECT 'Personnel', COUNT(*) FROM Personnel
-UNION ALL SELECT 'PersonnelAssignment', COUNT(*) FROM PersonnelAssignment
-UNION ALL SELECT 'FamilyMember', COUNT(*) FROM FamilyMember
-UNION ALL SELECT 'FamilyMemberAssignment', COUNT(*) FROM FamilyMemberAssignment
-UNION ALL SELECT 'ClubMember', COUNT(*) FROM ClubMember
-UNION ALL SELECT 'ClubMemberFamilyRelation', COUNT(*) FROM ClubMemberFamilyRelation
-UNION ALL SELECT 'Hobby', COUNT(*) FROM Hobby
-UNION ALL SELECT 'ClubMemberHobby', COUNT(*) FROM ClubMemberHobby
-UNION ALL SELECT 'Payment', COUNT(*) FROM Payment
-UNION ALL SELECT 'FIFAGame', COUNT(*) FROM FIFAGame
-UNION ALL SELECT 'FIFAParticipation', COUNT(*) FROM FIFAParticipation;
-```
+- Sent every Sunday, for the coming week's sessions.
+- Subject: team name + date/time (e.g. "Montreal Group 6 Saturday 18-July-2026 2:00 PM training session").
+- Body: member's name + role, coach's name + email, session type, address.
+- Log stores: date, sender (location name), receiver, subject, first 100 chars of body.

@@ -32,7 +32,7 @@ export default function FamilyMemberAssignmentOverview() {
       FamilyMemberAssignmentInput,
       FamilyMemberAssignmentInput
     >
-      title="Personnel-Assignment"
+      title="Family-Member-Assignment"
       description="Manage personnel assignments."
       columnDefs={familyMemberAssignmentFields}
       api={FamilyMemberAssignmentApi}
